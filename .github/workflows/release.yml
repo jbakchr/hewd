@@ -6,6 +6,9 @@ on:
       - "v*"
   workflow_dispatch: {}
 
+permissions:
+  contents: write # required for uploading release assets
+
 jobs:
   build:
     name: Build for ${{ matrix.goos }} / ${{ matrix.goarch }}
@@ -15,6 +18,9 @@ jobs:
       matrix:
         goos: [linux, darwin, windows]
         goarch: [amd64, arm64]
+
+    env:
+      CGO_ENABLED: 0
 
     steps:
       - name: Checkout source
@@ -26,20 +32,28 @@ jobs:
           go-version: "1.22"
 
       - name: Extract version from tag
-        id: vars
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        id: version
+        run: |
+          echo "GITHUB_REF=$GITHUB_REF"
+          VERSION="${GITHUB_REF#refs/tags/}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build binary
         run: |
           mkdir -p dist
+
           OUTPUT="hewd"
           if [ "${{ matrix.goos }}" = "windows" ]; then
             OUTPUT="hewd.exe"
           fi
 
+          echo "Building ${OUTPUT} for ${{ matrix.goos }} / ${{ matrix.goarch }}"
+
           GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
           go build \
-            -ldflags="-X github.com/jbakchr/hewd/internal/version.Version=${VERSION}" \
+            -trimpath \
+            -ldflags="-s -w -X github.com/jbakchr/hewd/internal/version.Version=${VERSION}" \
             -o dist/${OUTPUT} \
             ./cmd/hewd
 
@@ -50,11 +64,18 @@ jobs:
 
           if [ "${{ matrix.goos }}" = "windows" ]; then
             zip ${NAME}.zip hewd.exe
+            echo "Created ${NAME}.zip"
           else
             tar -czf ${NAME}.tar.gz hewd
+            echo "Created ${NAME}.tar.gz"
           fi
 
-      - name: Upload Release Assets
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS
+
+      - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*
