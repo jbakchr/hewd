@@ -23,6 +23,9 @@ and managing documentation assets for codebases.`,
 	// Add init command
 	cmd.AddCommand(newInitCmd())
 
+	// Add scan command
+	cmd.AddCommand(newScanCmd())
+
 	return cmd
 }
 
