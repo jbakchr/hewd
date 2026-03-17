@@ -7,11 +7,14 @@ import (
 	"sort"
 	"strings"
 
+	"encoding/json"
+
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 func newScanCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "scan",
 		Short: "Scan the current directory and summarize the project",
 		Long: `Scan the current working directory and produce a project summary,
@@ -22,18 +25,42 @@ including detected languages, documentation files, file counts, and structure in
 				return fmt.Errorf("could not get working directory: %w", err)
 			}
 
-			fmt.Println("Scanning project...")
-			fmt.Println()
-
 			summary, err := scanDirectory(cwd)
 			if err != nil {
 				return err
 			}
 
+			// Read flags
+			jsonOut, _ := cmd.Flags().GetBool("json")
+			yamlOut, _ := cmd.Flags().GetBool("yaml")
+			pretty, _ := cmd.Flags().GetBool("pretty")
+
+			// Prevent incompatible flag combinations
+			if jsonOut && yamlOut {
+				return fmt.Errorf("cannot use --json and --yaml together")
+			}
+
+			// JSON output
+			if jsonOut {
+				return printJSON(summary, pretty)
+			}
+
+			// YAML output
+			if yamlOut {
+				return printYAML(summary)
+			}
+
+			// Default human-readable output
 			printScanSummary(summary)
 			return nil
 		},
 	}
+
+	cmd.Flags().Bool("json", false, "Output scan result in JSON format")
+	cmd.Flags().Bool("yaml", false, "Output scan result in YAML format")
+	cmd.Flags().Bool("pretty", false, "Pretty-print JSON output")
+
+	return cmd
 }
 
 // ScanSummary holds all aggregated data from the scan.
@@ -133,4 +160,34 @@ func printScanSummary(s *ScanSummary) {
 
 	fmt.Println()
 	fmt.Println("Scan complete.")
+}
+
+// printJSON marshals the summary to JSON.
+func printJSON(s *ScanSummary, pretty bool) error {
+	var data []byte
+	var err error
+
+	if pretty {
+		data, err = json.MarshalIndent(s, "", "  ")
+	} else {
+		data, err = json.Marshal(s)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to encode JSON: %w", err)
+	}
+
+	fmt.Println(string(data))
+	return nil
+}
+
+// printYAML marshals the summary to YAML.
+func printYAML(s *ScanSummary) error {
+	data, err := yaml.Marshal(s)
+	if err != nil {
+		return fmt.Errorf("failed to encode YAML: %w", err)
+	}
+
+	fmt.Println(string(data))
+	return nil
 }
