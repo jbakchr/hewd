@@ -1,5 +1,4 @@
 # hewd
-
 _A fast, zero‑dependency CLI tool for initializing, scanning, and diagnosing documentation and configuration assets in software projects._
 
 ---
