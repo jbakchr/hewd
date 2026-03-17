@@ -13,6 +13,45 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// realLanguages maps file extensions to human-friendly language names.
+// Only these will be counted in language detection.
+var realLanguages = map[string]string{
+	"go":    "Go",
+	"js":    "JavaScript",
+	"ts":    "TypeScript",
+	"py":    "Python",
+	"rb":    "Ruby",
+	"java":  "Java",
+	"rs":    "Rust",
+	"c":     "C",
+	"h":     "C Header",
+	"cpp":   "C++",
+	"hpp":   "C++ Header",
+	"cs":    "C#",
+	"php":   "PHP",
+	"swift": "Swift",
+	"kt":    "Kotlin",
+	"m":     "Objective‑C",
+	"mm":    "Objective‑C++",
+
+	// Scripting & config formats
+	"sh":   "Shell",
+	"bash": "Bash",
+	"zsh":  "Zsh",
+	"ps1":  "PowerShell",
+
+	// Markup / data formats
+	"md":       "Markdown",
+	"markdown": "Markdown",
+	"txt":      "Plain Text",
+	"yaml":     "YAML",
+	"yml":      "YAML",
+	"json":     "JSON",
+	"toml":     "TOML",
+	"xml":      "XML",
+	"html":     "HTML",
+}
+
 func newScanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "scan",
@@ -109,8 +148,12 @@ func scanDirectory(root string) (*ScanSummary, error) {
 		// Detect languages by extension
 		ext := strings.ToLower(filepath.Ext(name))
 		if ext != "" {
-			ext = ext[1:] // remove leading dot
-			summary.Languages[ext]++
+			ext = ext[1:] // remove the leading dot
+
+			// Only count known/real languages
+			if langName, ok := realLanguages[ext]; ok {
+				summary.Languages[langName]++
+			}
 		}
 
 		return nil
