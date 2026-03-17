@@ -2,19 +2,37 @@ package doctor
 
 import "github.com/jbakchr/hewd/internal/scan"
 
-// RunAll executes all built-in rules.
 func RunAll(s *scan.Summary) Result {
-    results := Result{}
+	result := Result{}
 
-    for _, rule := range Rules {
-        passed, message := rule.Check(s)
+	total := 0
+	max := 0
 
-        results.Findings = append(results.Findings, Finding{
-            RuleID:  rule.ID,
-            Passed:  passed,
-            Message: message,
-        })
-    }
+	for _, rule := range Rules {
 
-    return results
+		// Default weight = 1 if none is set
+		w := rule.Weight
+		if w <= 0 {
+			w = 1
+		}
+
+		passed, message := rule.Check(s)
+
+		result.Findings = append(result.Findings, Finding{
+			RuleID:  rule.ID,
+			Passed:  passed,
+			Message: message,
+		})
+
+		// Count towards scoring
+		max += w
+		if passed {
+			total += w
+		}
+	}
+
+	result.Score = total
+	result.MaxScore = max
+
+	return result
 }
