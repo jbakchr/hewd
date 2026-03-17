@@ -6,6 +6,8 @@ import (
 	"os"
 	"sort"
 
+	iscan "github.com/jbakchr/hewd/internal/scan"
+
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -42,7 +44,7 @@ project structure problems, and offering improvement suggestions.`,
 			}
 
 			// Use your existing scanner
-			summary, err := scanDirectory(cwd)
+			summary, err := iscan.ScanDirectory(cwd)
 			if err != nil {
 				return err
 			}
@@ -72,7 +74,7 @@ project structure problems, and offering improvement suggestions.`,
 }
 
 // evaluateProject converts a ScanSummary into a DoctorResult.
-func evaluateProject(s *ScanSummary) *DoctorResult {
+func evaluateProject(s *iscan.Summary) *DoctorResult {
 	dr := &DoctorResult{
 		MissingDocs:     []string{},
 		PresentDocs:     []string{},
