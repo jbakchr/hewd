@@ -1,74 +1,48 @@
 package cmd
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
+    "fmt"
+    "os"
 
-	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
-
-	"github.com/jbakchr/hewd/internal/config"
-	idoctor "github.com/jbakchr/hewd/internal/doctor"
-	iscan "github.com/jbakchr/hewd/internal/scan"
+    "github.com/spf13/cobra"
+    "github.com/jbakchr/hewd/internal/scan"
+    "github.com/jbakchr/hewd/internal/rules"
 )
 
 func newDoctorCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "doctor",
-		Short: "Run diagnostic checks on the project",
-		RunE: func(cmd *cobra.Command, args []string) error {
+    cmd := &cobra.Command{
+        Use:   "doctor",
+        Short: "Run diagnostic checks on the project",
+        RunE: func(cmd *cobra.Command, args []string) error {
 
-			cwd, err := os.Getwd()
-			if err != nil {
-				return err
-			}
+            cwd, err := os.Getwd()
+            if err != nil {
+                return err
+            }
 
-			cfg, err := config.Load(cwd)
-			if err != nil {
-				return err
-			}
+            summary, err := scan.ScanDirectory(cwd)
+            if err != nil {
+                return err
+            }
 
-			summary, err := iscan.ScanDirectory(cwd)
-			if err != nil {
-				return err
-			}
+            results := rules.RunAll(summary)
 
-			results := idoctor.RunAll(summary, cfg)
+            if len(results) == 0 {
+                fmt.Println("No issues found. Project looks healthy!")
+                return nil
+            }
 
-			jsonOut, _ := cmd.Flags().GetBool("json")
-			yamlOut, _ := cmd.Flags().GetBool("yaml")
-			pretty, _ := cmd.Flags().GetBool("pretty")
+            fmt.Println("Doctor Results:")
+            for _, r := range results {
+                fmt.Printf("[%s] %s: %s\n", r.Level, r.ID, r.Message)
+                if r.File != "" {
+                    fmt.Printf("  File: %s\n", r.File)
+                }
+            }
 
-			if jsonOut && yamlOut {
-				return fmt.Errorf("cannot use --json and --yaml together")
-			}
+            return nil
+        },
+    }
 
-			if jsonOut {
-				if pretty {
-					data, _ := json.MarshalIndent(results, "", "  ")
-					fmt.Println(string(data))
-				} else {
-					data, _ := json.Marshal(results)
-					fmt.Println(string(data))
-				}
-				return nil
-			}
-
-			if yamlOut {
-				data, _ := yaml.Marshal(results)
-				fmt.Println(string(data))
-				return nil
-			}
-
-			printDoctorResults(results)
-			return nil
-		},
-	}
-
-	cmd.Flags().Bool("json", false, "Output diagnostics in JSON format")
-	cmd.Flags().Bool("yaml", false, "Output diagnostics in YAML format")
-	cmd.Flags().Bool("pretty", false, "Pretty-print JSON output")
-
-	return cmd
+    return cmd
 }
