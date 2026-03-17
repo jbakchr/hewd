@@ -18,6 +18,8 @@ _A fast, zero‑dependency CLI tool for initializing, scanning, and diagnosing d
 - [License](#-license)
 - [Project Links](#-project-links)
 
+---
+
 ## ✨ Features
 
 - 🔍 Scan project structure to detect languages, documentation, config files, and metadata
