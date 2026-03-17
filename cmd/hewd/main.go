@@ -1,24 +1,18 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 
 	"github.com/jbakchr/hewd/internal/version"
+	"github.com/jbakchr/hewd/pkg/cmd"
 )
 
 func main() {
-	// Flags
-	showVersion := flag.Bool("version", false, "Print version and exit")
-	flag.Parse()
+	rootCmd := cmd.NewRootCmd(version.Version)
 
-	if *showVersion {
-		fmt.Println("hewd version:", version.Version)
-		return
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
-
-	// Default behavior
-	fmt.Println("hewd CLI — nothing here yet!")
-	os.Exit(0)
 }
