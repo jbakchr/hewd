@@ -1,22 +1,25 @@
 package cmd
 
 import (
-    "fmt"
+	"fmt"
 
-    idoctor "github.com/jbakchr/hewd/internal/doctor"
+	idoctor "github.com/jbakchr/hewd/internal/doctor"
 )
 
 func printDoctorResults(r idoctor.Result) {
-    fmt.Println("Diagnostics:")
+	fmt.Println("Project Maturity Score:")
+	fmt.Printf("  %d / %d\n\n", r.Score, r.MaxScore)
 
-    for _, f := range r.Findings {
-        status := "FAIL"
-        if f.Passed {
-            status = "OK"
-        }
+	fmt.Println("Diagnostics:")
+	for _, f := range r.Findings {
+		status := "FAIL"
+		if f.Passed {
+			status = "OK"
+		}
 
-        fmt.Printf("  [%s] %s — %s\n", status, f.RuleID, f.Message)
-    }
+		fmt.Printf("  [%s] %s — %s\n",
+			status, f.RuleID, f.Message)
+	}
 
-    fmt.Println("\nDoctor complete.")
+	fmt.Println("\nDoctor complete.")
 }
