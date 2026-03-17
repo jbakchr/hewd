@@ -1,7 +1,6 @@
 # hewd
 
-`hewd` is a command-line tool for initializing, scanning,  
-and managing documentation assets for codebases.
+`hewd` is a command-line tool for initializing, scanning, and managing documentation assets for codebases.
 
 It is written in Go and distributed as a standalone, globally‑runnable binary.
 
