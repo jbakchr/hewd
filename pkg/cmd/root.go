@@ -26,6 +26,9 @@ and managing documentation assets for codebases.`,
 	// Add scan command
 	cmd.AddCommand(newScanCmd())
 
+	// Add doctor command
+	cmd.AddCommand(newDoctorCmd())
+
 	return cmd
 }
 
