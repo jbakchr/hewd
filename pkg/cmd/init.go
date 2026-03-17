@@ -9,41 +9,45 @@ import (
 )
 
 func newInitCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize hewd configuration",
-		Long: `Create the default hewd configuration directory
-and bootstrap initial configuration files.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			configDir, err := os.UserConfigDir()
+			cwd, err := os.Getwd()
 			if err != nil {
-				return fmt.Errorf("could not determine config directory: %w", err)
+				return err
 			}
 
-			hewdDir := filepath.Join(configDir, "hewd")
-			if err := os.MkdirAll(hewdDir, 0o755); err != nil {
-				return fmt.Errorf("failed to create directory %s: %w", hewdDir, err)
+			dir := filepath.Join(cwd, ".hewd")
+			os.MkdirAll(dir, 0755)
+
+			cfgPath := filepath.Join(dir, "config.yaml")
+
+			if _, err := os.Stat(cfgPath); err == nil {
+				return fmt.Errorf("config.yaml already exists")
 			}
 
-			configFile := filepath.Join(hewdDir, "config.yaml")
+			defaultConfig := `rules:
+  DOC-001: true
+  DOC-002: true
+  CFG-001: true
 
-			if _, err := os.Stat(configFile); os.IsNotExist(err) {
-				contents := []byte(`# hewd configuration file
-# Add your settings below.
+weights:
+  DOC-001: 10
+  DOC-002: 5
+  CFG-001: 5
 
-`)
-				if err := os.WriteFile(configFile, contents, 0o644); err != nil {
-					return fmt.Errorf("failed to write config file: %w", err)
-				}
+scan:
+  include: []
+  exclude:
+    - node_modules
+    - vendor
+    - dist
+`
 
-				fmt.Println("Initialized hewd configuration at:")
-				fmt.Println(" ", configFile)
-			} else {
-				fmt.Println("hewd configuration already exists at:")
-				fmt.Println(" ", configFile)
-			}
-
-			return nil
+			return os.WriteFile(cfgPath, []byte(defaultConfig), 0644)
 		},
 	}
+
+	return cmd
 }
