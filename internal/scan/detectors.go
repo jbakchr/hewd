@@ -67,4 +67,5 @@ var ConfigAssets = map[string]string{
 	"docker-compose.yml": "Docker Compose Config",
 	"openapi.yaml":       "OpenAPI Specification",
 	"openapi.yml":        "OpenAPI Specification",
+	".gitignore":         "Git Ignore File",
 }
