@@ -75,19 +75,22 @@ func newDiffCmd() *cobra.Command {
 			cfgDelta := newReport.CategoryScores.Config - oldReport.CategoryScores.Config
 			structDelta := newReport.CategoryScores.Structure - oldReport.CategoryScores.Structure
 
-			fmt.Println()
-			fmt.Println("Category changes:")
-			fmt.Printf("  Documentation: %d → %d (%+d)\n",
+			fmt.Printf("  %-14s %3d → %3d   (%+d)\n",
+				"Documentation:",
 				oldReport.CategoryScores.Documentation,
 				newReport.CategoryScores.Documentation,
 				docDelta,
 			)
-			fmt.Printf("  Config:        %d → %d (%+d)\n",
+
+			fmt.Printf("  %-14s %3d → %3d   (%+d)\n",
+				"Config:",
 				oldReport.CategoryScores.Config,
 				newReport.CategoryScores.Config,
 				cfgDelta,
 			)
-			fmt.Printf("  Structure:     %d → %d (%+d)\n",
+
+			fmt.Printf("  %-14s %3d → %3d   (%+d)\n",
+				"Structure:",
 				oldReport.CategoryScores.Structure,
 				newReport.CategoryScores.Structure,
 				structDelta,
