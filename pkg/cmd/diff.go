@@ -60,6 +60,7 @@ func newDiffCmd() *cobra.Command {
 			}
 
 			fmt.Println("\n===== OVERALL SCORE =====")
+			fmt.Println("----------------------------------------")
 			fmt.Printf("Old report score: %d\n", oldReport.Score)
 			fmt.Printf("New report score: %d\n", newReport.Score)
 
@@ -68,6 +69,7 @@ func newDiffCmd() *cobra.Command {
 			fmt.Printf("Score change: %+d\n", delta)
 
 			fmt.Println("\n===== CATEGORY SCORES =====")
+			fmt.Println("----------------------------------------")
 			// Category score deltas
 			docDelta := newReport.CategoryScores.Documentation - oldReport.CategoryScores.Documentation
 			cfgDelta := newReport.CategoryScores.Config - oldReport.CategoryScores.Config
@@ -101,6 +103,7 @@ func newDiffCmd() *cobra.Command {
 			}
 
 			fmt.Println("\n===== NEW ISSUES =====")
+			fmt.Println("----------------------------------------")
 			fmt.Println("New issues:")
 			foundNew := false
 			for _, r := range newReport.Results {
@@ -122,6 +125,7 @@ func newDiffCmd() *cobra.Command {
 			}
 
 			fmt.Println("\n===== RESOLVED ISSUES =====")
+			fmt.Println("----------------------------------------")
 			fmt.Println("Resolved issues:")
 			foundResolved := false
 			for _, r := range oldReport.Results {
