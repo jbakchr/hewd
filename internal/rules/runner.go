@@ -1,23 +1,47 @@
 package rules
 
-import "github.com/jbakchr/hewd/internal/scan"
+import (
+    "github.com/jbakchr/hewd/internal/config"
+    "github.com/jbakchr/hewd/internal/scan"
+)
 
-var allRules []Rule
+// RunAll executes all registered rules against the scan.Summary,
+// applying config-driven rule disabling and severity overrides.
+func RunAll(summary *scan.Summary, cfg *config.Config) []Result {
+    results := []Result{}
 
-func RegisterRule(r Rule) {
-	allRules = append(allRules, r)
-}
+    // Build disabled rule map
+    disabled := map[string]bool{}
+    if cfg != nil && cfg.Rules != nil {
+        for ruleID, enabled := range cfg.Rules {
+            // rules: { RULE_ID: false } means disabled
+            if !enabled {
+                disabled[ruleID] = true
+            }
+        }
+    }
 
-func RunAll(summary interface {
-	// we expect same interface as scan.Summary
-}) []Result {
+    // Run each registered rule
+    for _, reg := range allRules {
+        // Skip disabled rules
+        if disabled[reg.ID] {
+            continue
+        }
 
-	results := []Result{}
+        // Evaluate rule
+        out := reg.Func(summary)
 
-	for _, rule := range allRules {
-		out := rule(summary.(*scan.Summary))
-		results = append(results, out...)
-	}
+        // Apply config severity overrides
+        if cfg != nil && cfg.Weights != nil {
+            for i := range out {
+                if newWeight, ok := cfg.Weights[out[i].ID]; ok {
+                    out[i].Level = LevelFromInt(newWeight)
+                }
+            }
+        }
 
-	return results
+        results = append(results, out...)
+    }
+
+    return results
 }

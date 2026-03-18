@@ -4,40 +4,53 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"github.com/jbakchr/hewd/internal/config"
 )
 
-func NewRootCmd(ver string) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "hewd",
-		Short: "hewd — Documentation & project automation CLI",
-		Long: `hewd is a command-line tool for initializing, scanning,
-and managing documentation assets for codebases.`,
+// loadedConfig is cached so that multiple commands (scan, doctor)
+// do not reload the config file independently.
+var loadedConfig *config.Config
+
+// LoadHewdConfig loads `.hewd/config.yaml` once and reuses it.
+func LoadHewdConfig() *config.Config {
+	if loadedConfig != nil {
+		return loadedConfig
 	}
 
-	// Global persistent flags can be added here
-	cmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose output")
-
-	// Built-in version command
-	cmd.AddCommand(newVersionCmd(ver))
-
-	// Add init command
-	cmd.AddCommand(newInitCmd())
-
-	// Add scan command
-	cmd.AddCommand(newScanCmd())
-
-	// Add doctor command
-	cmd.AddCommand(newDoctorCmd())
-
-	return cmd
+	// Attempt to load config; missing config is not an error
+	cfg, err := config.Load(".")
+	if err == nil {
+		loadedConfig = cfg
+	}
+	return loadedConfig
 }
 
-func newVersionCmd(ver string) *cobra.Command {
-	return &cobra.Command{
-		Use:   "version",
-		Short: "Show version information",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("hewd version:", ver)
-		},
+// NewRootCmd constructs the top-level Cobra command for hewd.
+func NewRootCmd(version string) *cobra.Command {
+	rootCmd := &cobra.Command{
+		Use:   "hewd",
+		Short: "hewd — Documentation & Project Structure Toolkit",
+		Long: `hewd is a CLI tool that scans your project for documentation,
+configuration, and structural assets, and performs diagnostics to help maintain
+healthy codebases. Configuration is loaded from .hewd/config.yaml when present.`,
+	}
+
+	// Attach commands
+	rootCmd.AddCommand(newScanCmd())
+	rootCmd.AddCommand(newDoctorCmd())
+	rootCmd.AddCommand(newInitCmd())
+
+	// Version command
+	rootCmd.Version = version
+	rootCmd.SetVersionTemplate("hewd version {{.Version}}\n")
+
+	return rootCmd
+}
+
+// Execute is the main entry point invoked from main.go.
+func Execute(version string) {
+	if err := NewRootCmd(version).Execute(); err != nil {
+		fmt.Println(err)
 	}
 }

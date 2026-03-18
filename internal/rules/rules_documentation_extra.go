@@ -7,19 +7,30 @@ import (
 	"github.com/jbakchr/hewd/internal/scan"
 )
 
+// This file contains additional (non-core) documentation rules.
+//
+// These rules focus on project documentation maturity, structure,
+// and content quality. They complement the core rules defined
+// in rules_documentation.go.
+
 func init() {
-	RegisterRule(RuleDocsFolderExistsButEmpty)
-	RegisterRule(RuleReadmeMissingUsageSection)
-	RegisterRule(RuleChangelogExistsButEmpty)
-	RegisterRule(RuleTooManyMarkdownFilesWithoutDocsFolder)
+	RegisterRule("DOCS_EMPTY_FOLDER", RuleDocsFolderExistsButEmpty)
+	RegisterRule("DOC_README_NO_USAGE", RuleReadmeMissingUsageSection)
+	RegisterRule("DOC_CHANGELOG_EMPTY", RuleChangelogExistsButEmpty)
+	RegisterRule("DOC_MANY_MD_NO_DOCS_DIR", RuleTooManyMarkdownFilesWithoutDocsFolder)
 }
 
-// 1. docs/ exists but empty
-func RuleDocsFolderExistsButEmpty(s *scan.Summary) []Result {
+// -----------------------------------------------------------------------------
+// 1. docs/ exists but appears empty
+// -----------------------------------------------------------------------------
+
+func RuleDocsFolderExistsButEmpty(s interface{}) []Result {
+	summary := s.(*scan.Summary)
+
 	hasDocsDir := false
 	hasFilesInside := false
 
-	for _, files := range s.DocsFound {
+	for _, files := range summary.DocsFound {
 		for _, p := range files {
 			if strings.Contains(p, "docs/") {
 				hasDocsDir = true
@@ -28,7 +39,7 @@ func RuleDocsFolderExistsButEmpty(s *scan.Summary) []Result {
 		}
 	}
 
-	// If directory exists but nothing inside is detected
+	// If docs/ exists but no files were actually detected inside it
 	if hasDocsDir && !hasFilesInside {
 		return []Result{{
 			ID:      "DOCS_EMPTY_FOLDER",
@@ -40,26 +51,28 @@ func RuleDocsFolderExistsButEmpty(s *scan.Summary) []Result {
 	return nil
 }
 
+// -----------------------------------------------------------------------------
 // 2. README.md missing a “Usage” section
-func RuleReadmeMissingUsageSection(s *scan.Summary) []Result {
-	if !s.Documentation["README.md"] {
-		return nil // handled by other rule
+// -----------------------------------------------------------------------------
+
+func RuleReadmeMissingUsageSection(s interface{}) []Result {
+	summary := s.(*scan.Summary)
+
+	if !summary.Documentation["README.md"] {
+		return nil // Another rule already checks for missing README.
 	}
 
-	// Check if README file path is known
-	paths := s.DocsFound["Project Overview"]
+	paths := summary.DocsFound["Project Overview"]
 	if len(paths) == 0 {
 		return nil
 	}
 
-	// Load content
 	data, err := os.ReadFile(paths[0])
 	if err != nil {
-		return nil // reading errors are not the concern of this rule
+		return nil
 	}
 
 	content := strings.ToLower(string(data))
-
 	if !strings.Contains(content, "usage") {
 		return []Result{{
 			ID:      "DOC_README_NO_USAGE",
@@ -72,13 +85,18 @@ func RuleReadmeMissingUsageSection(s *scan.Summary) []Result {
 	return nil
 }
 
-// 3. CHANGELOG exists but empty / very small
-func RuleChangelogExistsButEmpty(s *scan.Summary) []Result {
-	if !s.Documentation["CHANGELOG.md"] {
+// -----------------------------------------------------------------------------
+// 3. CHANGELOG.md exists but is empty or extremely short
+// -----------------------------------------------------------------------------
+
+func RuleChangelogExistsButEmpty(s interface{}) []Result {
+	summary := s.(*scan.Summary)
+
+	if !summary.Documentation["CHANGELOG.md"] {
 		return nil
 	}
 
-	paths := s.DocsFound["Changelog"]
+	paths := summary.DocsFound["Changelog"]
 	if len(paths) == 0 {
 		return nil
 	}
@@ -92,7 +110,7 @@ func RuleChangelogExistsButEmpty(s *scan.Summary) []Result {
 		return []Result{{
 			ID:      "DOC_CHANGELOG_EMPTY",
 			Level:   Warn,
-			Message: "CHANGELOG exists but appears empty or too short.",
+			Message: "CHANGELOG.md exists but appears empty or too short.",
 			File:    paths[0],
 		}}
 	}
@@ -100,29 +118,35 @@ func RuleChangelogExistsButEmpty(s *scan.Summary) []Result {
 	return nil
 }
 
-// 4. Many markdown files but no docs folder
-func RuleTooManyMarkdownFilesWithoutDocsFolder(s *scan.Summary) []Result {
-	mdCount := 0
-	hasDocsFolder := false
+// -----------------------------------------------------------------------------
+// 4. Many markdown files but no docs/ folder exists
+// -----------------------------------------------------------------------------
 
-	for _, list := range s.DocsFound {
+func RuleTooManyMarkdownFilesWithoutDocsFolder(s interface{}) []Result {
+	summary := s.(*scan.Summary)
+
+	mdCount := 0
+	hasDocsDir := false
+
+	// Detect docs/ folder
+	for _, list := range summary.DocsFound {
 		for _, f := range list {
 			if strings.Contains(f, "docs/") {
-				hasDocsFolder = true
+				hasDocsDir = true
 			}
 		}
 	}
 
-	// Count Markdown via language detection
-	if count, ok := s.Languages["Markdown"]; ok {
+	// Count Markdown files using language detection
+	if count, ok := summary.Languages["Markdown"]; ok {
 		mdCount = count
 	}
 
-	if mdCount > 10 && !hasDocsFolder {
+	if mdCount > 10 && !hasDocsDir {
 		return []Result{{
 			ID:      "DOC_MANY_MD_NO_DOCS_DIR",
 			Level:   Info,
-			Message: "Repository contains many markdown files but no docs/ folder.",
+			Message: "Repository contains many markdown files but no docs/ directory.",
 		}}
 	}
 

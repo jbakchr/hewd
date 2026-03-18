@@ -1,42 +1,67 @@
 package rules
 
-import "github.com/jbakchr/hewd/internal/scan"
+import (
+	"github.com/jbakchr/hewd/internal/scan"
+)
+
+// This file contains the *fundamental* documentation rules for hewd.
+// Additional rules are provided in rules_documentation_extra.go.
+
+// -----------------------------------------------------------------------------
+// Rule Registration
+// -----------------------------------------------------------------------------
 
 func init() {
-    RegisterRule(RuleReadmeMissing)
-    RegisterRule(RuleLicenseMissing)
-    RegisterRule(RuleContributingMissing)
+	RegisterRule("DOC_README_MISSING", RuleReadmeMissing)
+	RegisterRule("DOC_LICENSE_MISSING", RuleLicenseMissing)
+	RegisterRule("DOC_CONTRIBUTING_MISSING", RuleContributingMissing)
 }
 
-func RuleReadmeMissing(s *scan.Summary) []Result {
-    if s.Documentation["README.md"] {
-        return nil
-    }
-    return []Result{{
-        ID:      "DOC_README_MISSING",
-        Level:   Error,
-        Message: "README.md is missing.",
-    }}
+// -----------------------------------------------------------------------------
+// Rules
+// -----------------------------------------------------------------------------
+
+// RuleReadmeMissing checks if README.md exists.
+func RuleReadmeMissing(s interface{}) []Result {
+	summary := s.(*scan.Summary)
+
+	if summary.Documentation["README.md"] {
+		return nil
+	}
+
+	return []Result{{
+		ID:      "DOC_README_MISSING",
+		Level:   Error,
+		Message: "README.md is missing.",
+	}}
 }
 
-func RuleLicenseMissing(s *scan.Summary) []Result {
-    if s.Documentation["LICENSE"] {
-        return nil
-    }
-    return []Result{{
-        ID:      "DOC_LICENSE_MISSING",
-        Level:   Warn,
-        Message: "LICENSE file not found.",
-    }}
+// RuleLicenseMissing checks if LICENSE exists.
+func RuleLicenseMissing(s interface{}) []Result {
+	summary := s.(*scan.Summary)
+
+	if summary.Documentation["LICENSE"] {
+		return nil
+	}
+
+	return []Result{{
+		ID:      "DOC_LICENSE_MISSING",
+		Level:   Warn,
+		Message: "LICENSE file is missing.",
+	}}
 }
 
-func RuleContributingMissing(s *scan.Summary) []Result {
-    if s.Documentation["CONTRIBUTING.md"] {
-        return nil
-    }
-    return []Result{{
-        ID:      "DOC_CONTRIB_MISSING",
-        Level:   Info,
-        Message: "CONTRIBUTING.md is recommended for open‑source projects.",
-    }}
+// RuleContributingMissing checks if CONTRIBUTING.md exists.
+func RuleContributingMissing(s interface{}) []Result {
+	summary := s.(*scan.Summary)
+
+	if summary.Documentation["CONTRIBUTING.md"] {
+		return nil
+	}
+
+	return []Result{{
+		ID:      "DOC_CONTRIBUTING_MISSING",
+		Level:   Info,
+		Message: "CONTRIBUTING.md is recommended for open-source projects, but is missing.",
+	}}
 }
