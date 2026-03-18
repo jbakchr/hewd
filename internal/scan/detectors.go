@@ -1,10 +1,15 @@
 package scan
 
-// ───────────────────────────────────────────────────────────────
-//
-//	Language Detection
-//
-// ───────────────────────────────────────────────────────────────
+// This file declares detection maps for languages, documentation assets,
+// and configuration assets. These maps are read by scanner.go,
+// keeping all domain knowledge centralized and easy to maintain.
+
+// -----------------------------------------------------------------------------
+// Language Detection
+// -----------------------------------------------------------------------------
+
+// RealLanguages maps file extensions (without leading ".") to human-friendly
+// language names. These values populate Summary.Languages.
 var RealLanguages = map[string]string{
 	"go":    "Go",
 	"js":    "JavaScript",
@@ -24,13 +29,13 @@ var RealLanguages = map[string]string{
 	"m":     "Objective‑C",
 	"mm":    "Objective‑C++",
 
-	// Scripting & Config formats
+	// Scripting
 	"sh":   "Shell",
 	"bash": "Bash",
 	"zsh":  "Zsh",
 	"ps1":  "PowerShell",
 
-	// Markup / Data formats
+	// Markup / data formats
 	"md":       "Markdown",
 	"markdown": "Markdown",
 	"txt":      "Plain Text",
@@ -42,13 +47,13 @@ var RealLanguages = map[string]string{
 	"html":     "HTML",
 }
 
-//
-// ───────────────────────────────────────────────────────────────
-//   NEW: Documentation and Configuration Asset Detection
-// ───────────────────────────────────────────────────────────────
-//
+// -----------------------------------------------------------------------------
+// Documentation Detection
+// -----------------------------------------------------------------------------
 
-// Map of well-known documentation files
+// DocumentationAssets maps filenames to human-friendly category labels.
+// scanner.go will populate Summary.Documentation and Summary.DocsFound based
+// on these entries.
 var DocumentationAssets = map[string]string{
 	"README.md":          "Project Overview",
 	"CONTRIBUTING.md":    "Contribution Guide",
@@ -58,7 +63,12 @@ var DocumentationAssets = map[string]string{
 	"CODE_OF_CONDUCT.md": "Code of Conduct",
 }
 
-// Map of config assets (file → label)
+// -----------------------------------------------------------------------------
+// Configuration File Detection
+// -----------------------------------------------------------------------------
+
+// ConfigAssets maps filenames to classification strings. The scanner uses this
+// to populate Summary.ConfigFiles.
 var ConfigAssets = map[string]string{
 	"go.mod":             "Go Module",
 	"package.json":       "Node Package Manifest",
@@ -67,5 +77,7 @@ var ConfigAssets = map[string]string{
 	"docker-compose.yml": "Docker Compose Config",
 	"openapi.yaml":       "OpenAPI Specification",
 	"openapi.yml":        "OpenAPI Specification",
-	".gitignore":         "Git Ignore File",
+
+	// Added after your bug report — ensures .gitignore is detected correctly:
+	".gitignore": "Git Ignore File",
 }

@@ -1,12 +1,10 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"sort"
 
 	iscan "github.com/jbakchr/hewd/internal/scan"
-	"gopkg.in/yaml.v3"
 )
 
 //
@@ -84,37 +82,4 @@ func printScanSummary(s *iscan.Summary) {
 
 	fmt.Println()
 	fmt.Println("Scan complete.")
-}
-
-// ───────────────────────────────────────────────────────────────
-//
-//	Output: JSON / YAML
-//
-// ───────────────────────────────────────────────────────────────
-func printJSON(s *iscan.Summary, pretty bool) error {
-	var data []byte
-	var err error
-
-	if pretty {
-		data, err = json.MarshalIndent(s, "", "  ")
-	} else {
-		data, err = json.Marshal(s)
-	}
-
-	if err != nil {
-		return fmt.Errorf("failed to encode JSON: %w", err)
-	}
-
-	fmt.Println(string(data))
-	return nil
-}
-
-func printYAML(s *iscan.Summary) error {
-	data, err := yaml.Marshal(s)
-	if err != nil {
-		return fmt.Errorf("failed to encode YAML: %w", err)
-	}
-
-	fmt.Println(string(data))
-	return nil
 }

@@ -1,80 +1,95 @@
 package rules
 
 import (
-    "strings"
-    "github.com/jbakchr/hewd/internal/scan"
+	"strings"
+
+	"github.com/jbakchr/hewd/internal/scan"
 )
 
+// This file contains additional configuration and CI-related rules.
+// These rules cover areas such as git hygiene, CI workflow existence,
+// and containerization best practices.
+
 func init() {
-    RegisterRule(RuleHasDockerfileButNoCompose)
-    RegisterRule(RuleMissingGitignore)
-    RegisterRule(RuleCIFolderButNoWorkflows)
+	RegisterRule("CFG_DOCKER_NO_COMPOSE", RuleHasDockerfileButNoCompose)
+	RegisterRule("CFG_NO_GITIGNORE", RuleMissingGitignore)
+	RegisterRule("CFG_GITHUB_NO_WORKFLOWS", RuleCIFolderButNoWorkflows)
 }
 
-// 5. Dockerfile exists but no docker-compose.yml
-func RuleHasDockerfileButNoCompose(s *scan.Summary) []Result {
-    if len(s.ConfigFiles["Docker Build Config"]) == 0 {
-        return nil
-    }
+// -----------------------------------------------------------------------------
+// 1. Dockerfile present but no docker-compose.yml
+// -----------------------------------------------------------------------------
 
-    if len(s.ConfigFiles["Docker Compose Config"]) == 0 {
-        return []Result{{
-            ID:      "CFG_DOCKER_NO_COMPOSE",
-            Level:   Info,
-            Message: "Dockerfile found but no docker-compose.yml present.",
-        }}
-    }
+func RuleHasDockerfileButNoCompose(s interface{}) []Result {
+	summary := s.(*scan.Summary)
 
-    return nil
+	hasDockerfile := len(summary.ConfigFiles["Docker Build Config"]) > 0
+	hasCompose := len(summary.ConfigFiles["Docker Compose Config"]) > 0
+
+	if !hasDockerfile {
+		return nil
+	}
+
+	if !hasCompose {
+		return []Result{{
+			ID:      "CFG_DOCKER_NO_COMPOSE",
+			Level:   Info,
+			Message: "Dockerfile found but no docker-compose.yml present.",
+			File:    first(summary.ConfigFiles["Docker Build Config"]),
+		}}
+	}
+
+	return nil
 }
 
-// 6. Missing .gitignore
-func RuleMissingGitignore(s *scan.Summary) []Result {
-    // Detect via ConfigFiles or direct scan
-    found := false
-    for _, files := range s.ConfigFiles {
-        for _, f := range files {
-            if strings.HasSuffix(f, ".gitignore") {
-                found = true
-            }
-        }
-    }
+// -----------------------------------------------------------------------------
+// 2. .gitignore should exist in most projects
+// -----------------------------------------------------------------------------
 
-    if !found {
-        return []Result{{
-            ID:      "CFG_NO_GITIGNORE",
-            Level:   Info,
-            Message: ".gitignore file not found.",
-        }}
-    }
+func RuleMissingGitignore(s interface{}) []Result {
+	summary := s.(*scan.Summary)
 
-    return nil
+	// Detect via ConfigFiles
+	if len(summary.ConfigFiles["Git Ignore File"]) > 0 {
+		return nil
+	}
+
+	return []Result{{
+		ID:      "CFG_NO_GITIGNORE",
+		Level:   Info,
+		Message: ".gitignore file not found.",
+	}}
 }
 
-// 7. .github/ folder exists but has no workflows
-func RuleCIFolderButNoWorkflows(s *scan.Summary) []Result {
-    hasGithubFolder := false
-    hasWorkflows := false
+// -----------------------------------------------------------------------------
+// 3. .github folder present but no workflow files
+// -----------------------------------------------------------------------------
 
-    // Detect directories
-    for _, files := range s.ConfigFiles {
-        for _, f := range files {
-            if strings.Contains(f, ".github") {
-                hasGithubFolder = true
-            }
-            if strings.Contains(f, ".github/workflows") {
-                hasWorkflows = true
-            }
-        }
-    }
+func RuleCIFolderButNoWorkflows(s interface{}) []Result {
+	summary := s.(*scan.Summary)
 
-    if hasGithubFolder && !hasWorkflows {
-        return []Result{{
-            ID:      "CFG_GITHUB_NO_WORKFLOWS",
-            Level:   Warn,
-            Message: ".github/ folder found but no workflows detected.",
-        }}
-    }
+	hasGithubFolder := false
+	hasWorkflows := false
 
-    return nil
+	for cfgType, files := range summary.ConfigFiles {
+		for _, f := range files {
+			if strings.Contains(f, ".github/") {
+				hasGithubFolder = true
+			}
+			if cfgType == ".github/workflows" ||
+				strings.Contains(f, ".github/workflows/") {
+				hasWorkflows = true
+			}
+		}
+	}
+
+	if hasGithubFolder && !hasWorkflows {
+		return []Result{{
+			ID:      "CFG_GITHUB_NO_WORKFLOWS",
+			Level:   Warn,
+			Message: ".github/ folder found but no workflow files detected.",
+		}}
+	}
+
+	return nil
 }

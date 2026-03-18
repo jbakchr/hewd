@@ -3,102 +3,135 @@ package rules
 import (
 	"os"
 	"strings"
+	"time"
 
 	"github.com/jbakchr/hewd/internal/scan"
 )
 
+// This file contains additional (non-core) structural and metadata rules.
+// These focus on heuristic project maturity indicators, large-repo hygiene,
+// and basic documentation expectations for real-world repositories.
+
 func init() {
-	RegisterRule(RuleManyLanguagesNoArchitectureDoc)
-	RegisterRule(RuleLargeRepoNoLicenseReference)
-	RegisterRule(RuleRootReadmeVerySmall)
+	RegisterRule("STRUCT_NO_DOCS_DIR_FOR_LARGE_REPO", RuleLargeRepoNoDocsDir)
+	RegisterRule("STRUCT_STALE_CHANGELOG", RuleStaleChangelog)
+	RegisterRule("STRUCT_STALE_README", RuleStaleReadme)
 }
 
-// 8. Multiple languages but no architecture docs
-func RuleManyLanguagesNoArchitectureDoc(s *scan.Summary) []Result {
-	if len(s.Languages) < 2 {
-		return nil
+// -----------------------------------------------------------------------------
+// 1. Large repo but no docs/ directory
+// -----------------------------------------------------------------------------
+
+func RuleLargeRepoNoDocsDir(s interface{}) []Result {
+	summary := s.(*scan.Summary)
+
+	if summary.Files < 50 {
+		return nil // heuristic: only care for larger projects
 	}
 
-	// detect docs/architecture or similar
-	found := false
-	for _, files := range s.DocsFound {
-		for _, f := range files {
-			lowered := strings.ToLower(f)
-			if strings.Contains(lowered, "architecture") ||
-				strings.Contains(lowered, "design") {
-				found = true
+	hasDocsDir := false
+	for _, files := range summary.DocsFound {
+		for _, p := range files {
+			if strings.Contains(p, "docs/") {
+				hasDocsDir = true
+				break
 			}
 		}
 	}
 
-	if !found {
+	if !hasDocsDir {
 		return []Result{{
-			ID:      "STRUCT_MULTI_LANG_NO_ARCH",
+			ID:      "STRUCT_NO_DOCS_DIR_FOR_LARGE_REPO",
 			Level:   Info,
-			Message: "Multiple languages detected but no architecture/design docs found.",
+			Message: "Large repository detected but no docs/ directory found.",
 		}}
 	}
 
 	return nil
 }
 
-// 9. Large repo but README does not reference LICENSE
-func RuleLargeRepoNoLicenseReference(s *scan.Summary) []Result {
-	if !s.Documentation["README.md"] {
+// -----------------------------------------------------------------------------
+// 2. Changelog exists but is stale (last modified long ago)
+// -----------------------------------------------------------------------------
+
+func RuleStaleChangelog(s interface{}) []Result {
+	summary := s.(*scan.Summary)
+
+	if !summary.Documentation["CHANGELOG.md"] {
 		return nil
 	}
 
-	if s.Files < 50 {
-		return nil
-	}
-
-	readmePath := s.DocsFound["Project Overview"]
-	if len(readmePath) == 0 {
-		return nil
-	}
-
-	data, err := os.ReadFile(readmePath[0])
-	if err != nil {
-		return nil
-	}
-
-	text := strings.ToLower(string(data))
-	if !strings.Contains(text, "license") && s.Documentation["LICENSE"] {
-		return []Result{{
-			ID:      "STRUCT_README_NO_LICENSE",
-			Level:   Info,
-			Message: "Large project: README found but does not reference LICENSE.",
-			File:    readmePath[0],
-		}}
-	}
-
-	return nil
-}
-
-// 10. README is too small (heuristic)
-func RuleRootReadmeVerySmall(s *scan.Summary) []Result {
-	if !s.Documentation["README.md"] {
-		return nil
-	}
-
-	paths := s.DocsFound["Project Overview"]
+	paths := summary.DocsFound["Changelog"]
 	if len(paths) == 0 {
 		return nil
 	}
 
-	data, err := os.ReadFile(paths[0])
+	path := paths[0]
+
+	info, err := os.Stat(path)
 	if err != nil {
 		return nil
 	}
 
-	if len(data) < 80 {
+	// Heuristic: warn if changelog hasn't been updated for ~180 days.
+	const staleDays = 180
+	age := daysSince(info.ModTime())
+
+	if age > staleDays {
 		return []Result{{
-			ID:      "DOC_README_TOO_SMALL",
+			ID:      "STRUCT_STALE_CHANGELOG",
 			Level:   Warn,
-			Message: "README.md appears very small; consider expanding project details.",
-			File:    paths[0],
+			Message: "CHANGELOG.md appears stale (no updates for a long time).",
+			File:    path,
 		}}
 	}
 
 	return nil
+}
+
+// -----------------------------------------------------------------------------
+// 3. README.md appears stale (not updated recently)
+// -----------------------------------------------------------------------------
+
+func RuleStaleReadme(s interface{}) []Result {
+	summary := s.(*scan.Summary)
+
+	if !summary.Documentation["README.md"] {
+		return nil
+	}
+
+	paths := summary.DocsFound["Project Overview"]
+	if len(paths) == 0 {
+		return nil
+	}
+
+	path := paths[0]
+
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil
+	}
+
+	// Heuristic: warn if README hasn't been updated for ~365 days.
+	const staleDays = 365
+	age := daysSince(info.ModTime())
+
+	if age > staleDays {
+		return []Result{{
+			ID:      "STRUCT_STALE_README",
+			Level:   Info,
+			Message: "README.md appears stale (no updates for a long time).",
+			File:    path,
+		}}
+	}
+
+	return nil
+}
+
+// -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
+
+func daysSince(t time.Time) int {
+	return int(time.Since(t).Hours() / 24)
 }
