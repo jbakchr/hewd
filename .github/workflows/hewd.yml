@@ -7,16 +7,16 @@ jobs:
   hewd:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      pull-requests: write
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Build hewd
         run: |
           go build -o hewd ./cmd/hewd
-
-      - name: Move hewd into PATH
-        run: |
           sudo mv hewd /usr/local/bin/hewd
           sudo chmod +x /usr/local/bin/hewd
 
