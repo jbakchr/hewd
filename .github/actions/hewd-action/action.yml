@@ -32,10 +32,9 @@ inputs:
     required: false
     default: "true"
 
-
 runs:
   using: "node16"
-  main: "dist/index.js"
+  main: "dist/index.cjs"
 
 branding:
   icon: "check-circle"
