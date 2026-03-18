@@ -1,0 +1,28 @@
+name: hewd
+
+on:
+  pull_request:
+
+jobs:
+  hewd:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build hewd
+        run: |
+          go build -o hewd ./cmd/hewd
+          sudo mv hewd /usr/local/bin/hewd
+          sudo chmod +x /usr/local/bin/hewd
+
+      - name: Run hewd action
+        uses: ./.github/actions/hewd-action
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pr-comment: true
+          md-report: true

@@ -30,3 +30,7 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Ignore action source but keep dist
+.github/actions/hewd-action/node_modules/
+.github/actions/hewd-action/src/
