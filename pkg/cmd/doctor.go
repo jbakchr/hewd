@@ -15,6 +15,12 @@ import (
 	"github.com/jbakchr/hewd/internal/score"
 )
 
+type DoctorOutput struct {
+	Score    int                  `json:"score" yaml:"score"`
+	Category score.CategoryScores `json:"category_scores" yaml:"category_scores"`
+	Results  []score.ScoredRule   `json:"results" yaml:"results"`
+}
+
 func newDoctorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "doctor",
@@ -47,6 +53,7 @@ and CI-friendly exit codes (--fail-on).`,
 			pretty, _ := cmd.Flags().GetBool("pretty")
 			failOnStr, _ := cmd.Flags().GetString("fail-on")
 			showScore, _ := cmd.Flags().GetBool("score")
+			showCategoryScore, _ := cmd.Flags().GetBool("category-score")
 
 			// Prevent conflict
 			if jsonOut && yamlOut {
@@ -61,14 +68,22 @@ and CI-friendly exit codes (--fail-on).`,
 				Score:   score.Score(results, cfg),
 				Results: wrapResultsWithCategory(results),
 			}
+			// Prepare detailed output structure
+			categoryScores := score.ScoreByCategory(scored.Results, cfg)
+
+			out := DoctorOutput{
+				Score:    scored.Score,
+				Category: categoryScores,
+				Results:  scored.Results,
+			}
 
 			// ----- JSON -----
 			if jsonOut {
 				var data []byte
 				if pretty {
-					data, _ = json.MarshalIndent(scored, "", "  ")
+					data, _ = json.MarshalIndent(out, "", "  ")
 				} else {
-					data, _ = json.Marshal(scored)
+					data, _ = json.Marshal(out)
 				}
 				fmt.Println(string(data))
 				return evaluateDoctorExitCode(results, failOnStr)
@@ -76,14 +91,22 @@ and CI-friendly exit codes (--fail-on).`,
 
 			// ----- YAML -----
 			if yamlOut {
-				data, _ := yaml.Marshal(scored)
+				data, _ := yaml.Marshal(out)
 				fmt.Println(string(data))
 				return evaluateDoctorExitCode(results, failOnStr)
 			}
 
 			// ----- PRETTY OUTPUT -----
+
 			if showScore {
-				fmt.Printf("Project Health Score: %d/100\n\n", scored.Score)
+				fmt.Printf("Overall Score: %d/100\n", scored.Score)
+			}
+
+			if showCategoryScore {
+				fmt.Printf("Documentation Score: %d/100\n", categoryScores.Documentation)
+				fmt.Printf("Config Score:        %d/100\n", categoryScores.Config)
+				fmt.Printf("Structure Score:     %d/100\n", categoryScores.Structure)
+				fmt.Printf("Overall Score:       %d/100\n\n", categoryScores.Overall)
 			}
 
 			printDoctorPretty(results)
@@ -100,6 +123,7 @@ and CI-friendly exit codes (--fail-on).`,
 	cmd.Flags().Bool("pretty", false, "Pretty-print JSON output")
 	cmd.Flags().String("fail-on", "error", "Fail on this severity or higher (info|warn|error)")
 	cmd.Flags().Bool("score", false, "Show project maturity score")
+	cmd.Flags().Bool("category-score", false, "Show per-category maturity scores")
 
 	return cmd
 }
