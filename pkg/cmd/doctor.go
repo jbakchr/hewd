@@ -54,6 +54,7 @@ and CI-friendly exit codes (--fail-on).`,
 			failOnStr, _ := cmd.Flags().GetString("fail-on")
 			showScore, _ := cmd.Flags().GetBool("score")
 			showCategoryScore, _ := cmd.Flags().GetBool("category-score")
+			markdownOut, _ := cmd.Flags().GetBool("md")
 
 			// Prevent conflict
 			if jsonOut && yamlOut {
@@ -75,6 +76,12 @@ and CI-friendly exit codes (--fail-on).`,
 				Score:    scored.Score,
 				Category: categoryScores,
 				Results:  scored.Results,
+			}
+
+			if markdownOut {
+				md := renderMarkdown(out)
+				fmt.Println(md)
+				return evaluateDoctorExitCode(results, failOnStr)
 			}
 
 			// ----- JSON -----
@@ -124,6 +131,7 @@ and CI-friendly exit codes (--fail-on).`,
 	cmd.Flags().String("fail-on", "error", "Fail on this severity or higher (info|warn|error)")
 	cmd.Flags().Bool("score", false, "Show project maturity score")
 	cmd.Flags().Bool("category-score", false, "Show per-category maturity scores")
+	cmd.Flags().Bool("md", false, "Output results as Markdown")
 
 	return cmd
 }
