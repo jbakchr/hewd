@@ -1,0 +1,42 @@
+name: "hewd Project Health Checker"
+description: "Run hewd doctor with scoring, categories, and Markdown output"
+author: "jbakchr"
+inputs:
+  fail-on:
+    description: "Fail on this severity or higher (info|warn|error)"
+    required: false
+    default: "error"
+
+  only:
+    description: "Comma-separated list of categories to include"
+    required: false
+    default: ""
+
+  except:
+    description: "Comma-separated list of categories to exclude"
+    required: false
+    default: ""
+
+  md-report:
+    description: "Output Markdown report"
+    required: false
+    default: "true"
+
+  github-token:
+    description: "GitHub token for posting PR comments"
+    required: false
+    default: "${{ github.token }}"
+
+  pr-comment:
+    description: "Post Markdown report as a pull request comment"
+    required: false
+    default: "true"
+
+
+runs:
+  using: "node16"
+  main: "dist/index.js"
+
+branding:
+  icon: "check-circle"
+  color: "blue"
