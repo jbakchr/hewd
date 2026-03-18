@@ -1,7 +1,7 @@
-const core = require("@actions/core");
-const exec = require("@actions/exec");
-const github = require("@actions/github");
-const fs = require("fs");
+import * as core from "@actions/core";
+import * as github from "@actions/github";
+import { exec } from "@actions/exec";
+import fs from "fs";
 
 async function postComment(markdown) {
   const token = core.getInput("github-token");
@@ -12,7 +12,7 @@ async function postComment(markdown) {
   const prNumber = context.payload.pull_request.number;
   const marker = "<!-- hewd-report -->";
 
-  // Find existing comment
+  // Find previous comment
   const { data: comments } = await octokit.rest.issues.listComments({
     owner: repo.owner,
     repo: repo.repo,
@@ -23,7 +23,6 @@ async function postComment(markdown) {
   const body = `${marker}\n${markdown}`;
 
   if (existing) {
-    // Update
     await octokit.rest.issues.updateComment({
       owner: repo.owner,
       repo: repo.repo,
@@ -31,7 +30,6 @@ async function postComment(markdown) {
       body,
     });
   } else {
-    // Create
     await octokit.rest.issues.createComment({
       owner: repo.owner,
       repo: repo.repo,
@@ -49,7 +47,6 @@ async function run() {
     const mdReport = core.getInput("md-report") === "true";
 
     let args = ["doctor"];
-
     if (failOn) args.push(`--fail-on=${failOn}`);
     if (only) args.push(`--only=${only}`);
     if (except) args.push(`--except=${except}`);
@@ -62,15 +59,12 @@ async function run() {
       },
     };
 
-    // Run hewd
-    await exec.exec("hewd", args, options);
+    await exec("hewd", args, options);
 
-    // Save Markdown output for artifact
+    // Write file
     fs.writeFileSync("hewd-report.md", output);
 
-    // ===============================================
-    // 🔥 PR COMMENT LOGIC GOES RIGHT HERE
-    // ===============================================
+    // PR Commenting
     const context = github.context;
     if (
       core.getInput("pr-comment") === "true" &&
@@ -78,7 +72,6 @@ async function run() {
     ) {
       await postComment(output);
     }
-    // ===============================================
 
     core.setOutput("report", output);
   } catch (err) {
