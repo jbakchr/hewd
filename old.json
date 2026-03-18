@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "hewdVersion": "v0.0.2-rc5",
+  "generatedAt": "2026-03-18T18:19:52.622681+01:00",
+  "score": 77,
+  "categoryScores": {
+    "documentation": 94,
+    "config": 85,
+    "structure": 98,
+    "overall": 92
+  },
+  "results": [
+    {
+      "id": "CFG_GOMOD_NO_LICENSE",
+      "level": "warn",
+      "message": "go.mod is present but the project does not include a LICENSE file.",
+      "file": "/Users/jbaph/Documents/projects/go/hewd/go.mod",
+      "category": "config"
+    },
+    {
+      "id": "CFG_NODE_NO_LOCKFILE",
+      "level": "warn",
+      "message": "package.json is present but no lockfile detected (package-lock.json or yarn.lock).",
+      "file": "/Users/jbaph/Documents/projects/go/hewd/.github/actions/hewd-action/dist/package.json",
+      "category": "config"
+    },
+    {
+      "id": "CFG_GITHUB_NO_WORKFLOWS",
+      "level": "warn",
+      "message": ".github/ folder found but no workflow files detected.",
+      "category": "config"
+    },
+    {
+      "id": "DOC_LICENSE_MISSING",
+      "level": "warn",
+      "message": "LICENSE file is missing.",
+      "category": "documentation"
+    },
+    {
+      "id": "DOC_README_NO_USAGE",
+      "level": "info",
+      "message": "README.md does not contain a 'Usage' section.",
+      "file": "/Users/jbaph/Documents/projects/go/hewd/README.md",
+      "category": "documentation"
+    },
+    {
+      "id": "STRUCT_MULTI_LANG_NO_ARCH",
+      "level": "info",
+      "message": "Multiple languages detected but no architecture/design docs found.",
+      "category": "structure"
+    },
+    {
+      "id": "STRUCT_NO_DOCS_DIR_FOR_LARGE_REPO",
+      "level": "info",
+      "message": "Large repository detected but no docs/ directory found.",
+      "category": "structure"
+    }
+  ],
+  "fixable": [
+    {
+      "ruleId": "CFG_GITHUB_NO_WORKFLOWS",
+      "message": "Create .github/workflows/ci.yml",
+      "filePath": "/Users/jbaph/Documents/projects/go/hewd/.github/workflows/ci.yml"
+    },
+    {
+      "ruleId": "DOC_LICENSE_MISSING",
+      "message": "Create LICENSE file",
+      "filePath": "/Users/jbaph/Documents/projects/go/hewd/LICENSE"
+    },
+    {
+      "ruleId": "STRUCT_NO_DOCS_DIR_FOR_LARGE_REPO",
+      "message": "Create docs/ directory",
+      "filePath": "/Users/jbaph/Documents/projects/go/hewd/docs"
+    }
+  ]
+}

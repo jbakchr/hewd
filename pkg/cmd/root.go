@@ -19,6 +19,7 @@ func NewRootCmd(version string) *cobra.Command {
 	rootCmd.AddCommand(newBadgeCmd())
 	rootCmd.AddCommand(newFixCmd())
 	rootCmd.AddCommand(newExportCmd())
+	rootCmd.AddCommand(newDiffCmd())
 
 	rootCmd.Version = version
 	rootCmd.SetVersionTemplate("hewd version {{.Version}}\n")
