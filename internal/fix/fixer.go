@@ -71,6 +71,9 @@ func ApplyFix(f Fix) error {
 		return nil
 	}
 
+	// Ensure parent directory exists
+	_ = os.MkdirAll(filepath.Dir(f.FilePath), 0755)
+
 	content := defaultContentForFix(f.RuleID)
 	return os.WriteFile(f.FilePath, []byte(content), 0644)
 }
