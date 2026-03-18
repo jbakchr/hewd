@@ -1,47 +1,67 @@
 package rules
 
 import (
-    "github.com/jbakchr/hewd/internal/config"
-    "github.com/jbakchr/hewd/internal/scan"
+	"strings"
+
+	"github.com/jbakchr/hewd/internal/config"
+	"github.com/jbakchr/hewd/internal/scan"
 )
 
-// RunAll executes all registered rules against the scan.Summary,
-// applying config-driven rule disabling and severity overrides.
-func RunAll(summary *scan.Summary, cfg *config.Config) []Result {
-    results := []Result{}
+func RunAll(summary *scan.Summary, cfg *config.Config, onlyCats, exceptCats []string) []Result {
 
-    // Build disabled rule map
-    disabled := map[string]bool{}
-    if cfg != nil && cfg.Rules != nil {
-        for ruleID, enabled := range cfg.Rules {
-            // rules: { RULE_ID: false } means disabled
-            if !enabled {
-                disabled[ruleID] = true
-            }
-        }
-    }
+	results := []Result{}
 
-    // Run each registered rule
-    for _, reg := range allRules {
-        // Skip disabled rules
-        if disabled[reg.ID] {
-            continue
-        }
+	// Rule disabling (from config.rules: map[string]bool)
+	disabled := map[string]bool{}
+	if cfg != nil && cfg.Rules != nil {
+		for ruleID, enabled := range cfg.Rules {
+			if !enabled {
+				disabled[ruleID] = true
+			}
+		}
+	}
 
-        // Evaluate rule
-        out := reg.Func(summary)
+	// Category filtering maps
+	only := make(map[string]bool)
+	for _, c := range onlyCats {
+		only[strings.ToLower(c)] = true
+	}
 
-        // Apply config severity overrides
-        if cfg != nil && cfg.Weights != nil {
-            for i := range out {
-                if newWeight, ok := cfg.Weights[out[i].ID]; ok {
-                    out[i].Level = LevelFromInt(newWeight)
-                }
-            }
-        }
+	except := make(map[string]bool)
+	for _, c := range exceptCats {
+		except[strings.ToLower(c)] = true
+	}
 
-        results = append(results, out...)
-    }
+	for _, reg := range allRules {
 
-    return results
+		cat := strings.ToLower(reg.Category)
+
+		// category filtering: only vs except
+		if len(only) > 0 && !only[cat] {
+			continue
+		}
+		if except[cat] {
+			continue
+		}
+
+		// rule disabling
+		if disabled[reg.ID] {
+			continue
+		}
+
+		out := reg.Func(summary)
+
+		// severity override from config.weights
+		if cfg != nil && cfg.Weights != nil {
+			for i := range out {
+				if override, ok := cfg.Weights[out[i].ID]; ok {
+					out[i].Level = LevelFromInt(override)
+				}
+			}
+		}
+
+		results = append(results, out...)
+	}
+
+	return results
 }

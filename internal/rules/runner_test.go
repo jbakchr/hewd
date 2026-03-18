@@ -8,11 +8,10 @@ import (
 	"github.com/jbakchr/hewd/internal/scan"
 )
 
-// A fake summary for simple rule testing
-func fakeSummary(missingReadme bool) *scan.Summary {
+func fakeSummary(hasReadme bool) *scan.Summary {
 	return &scan.Summary{
 		Documentation: map[string]bool{
-			"README.md": missingReadme == false,
+			"README.md": hasReadme,
 			"LICENSE":   true,
 		},
 		Languages:   map[string]int{},
@@ -21,22 +20,31 @@ func fakeSummary(missingReadme bool) *scan.Summary {
 	}
 }
 
+// --------------------------------------------------
+// Rule disabling
+// --------------------------------------------------
+
 func TestRuleDisabling(t *testing.T) {
 	cfg := &config.Config{
 		Rules: map[string]bool{
-			"DOC_README_MISSING": false, // disable rule
+			"DOC_README_MISSING": false,
 		},
 	}
 
-	s := fakeSummary(true)
-	results := rules.RunAll(s, cfg)
+	s := fakeSummary(false)
+
+	results := rules.RunAll(s, cfg, nil, nil)
 
 	for _, r := range results {
 		if r.ID == "DOC_README_MISSING" {
-			t.Fatalf("rule should be disabled")
+			t.Fatalf("DOC_README_MISSING should be disabled")
 		}
 	}
 }
+
+// --------------------------------------------------
+// Severity override
+// --------------------------------------------------
 
 func TestSeverityOverride(t *testing.T) {
 	cfg := &config.Config{
@@ -55,19 +63,57 @@ func TestSeverityOverride(t *testing.T) {
 		ConfigFiles: map[string][]string{},
 	}
 
-	results := rules.RunAll(s, cfg)
+	results := rules.RunAll(s, cfg, nil, nil)
 
 	found := false
 	for _, r := range results {
 		if r.ID == "DOC_LICENSE_MISSING" {
 			found = true
 			if r.Level != rules.Error {
-				t.Errorf("expected overridden severity to be error, got %s", r.Level)
+				t.Fatalf("expected overridden severity to be error, got %s", r.Level)
 			}
 		}
 	}
 
 	if !found {
-		t.Fatalf("expected DOC_LICENSE_MISSING result")
+		t.Fatal("did not find DOC_LICENSE_MISSING result")
+	}
+}
+
+// --------------------------------------------------
+// Category filtering (only)
+// --------------------------------------------------
+
+func TestCategoryFiltering_Only(t *testing.T) {
+	s := fakeSummary(false)
+
+	only := []string{"documentation"}
+	except := []string{}
+
+	results := rules.RunAll(s, nil, only, except)
+
+	for _, r := range results {
+		if rules.CategoryForRule(r.ID) != "documentation" {
+			t.Fatalf("expected only documentation rules, got %s", r.ID)
+		}
+	}
+}
+
+// --------------------------------------------------
+// Category filtering (except)
+// --------------------------------------------------
+
+func TestCategoryFiltering_Except(t *testing.T) {
+	s := fakeSummary(false)
+
+	only := []string{}
+	except := []string{"documentation"}
+
+	results := rules.RunAll(s, nil, only, except)
+
+	for _, r := range results {
+		if rules.CategoryForRule(r.ID) == "documentation" {
+			t.Fatalf("documentation rule should have been excluded: %s", r.ID)
+		}
 	}
 }

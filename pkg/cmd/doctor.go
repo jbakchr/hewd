@@ -19,45 +19,56 @@ func newDoctorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "doctor",
 		Short: "Run diagnostic checks on the project",
-		Long: `Run validation rules against the scanned project structure.
-Respects settings from .hewd/config.yaml. Produces structured output and
-supports CI-friendly exit codes with --fail-on.`,
+		Long: `Runs validation rules against the scanned project structure,
+supports categories (--only/--except), scoring (--score), structured output,
+and CI-friendly exit codes (--fail-on).`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
+			// Load cwd
 			cwd, err := os.Getwd()
 			if err != nil {
 				return err
 			}
 
+			// Load config (optional)
 			cfg, _ := config.Load(cwd)
+
+			// Scan directory
 			summary, err := scan.ScanDirectory(cwd)
 			if err != nil {
 				return err
 			}
 
-			results := rules.RunAll(summary, cfg)
-			combined := score.ScoreResult{
-				Score:   score.Score(results, cfg),
-				Results: results,
-			}
-
+			// Flags
+			onlyCats, _ := cmd.Flags().GetStringSlice("only")
+			exceptCats, _ := cmd.Flags().GetStringSlice("except")
 			jsonOut, _ := cmd.Flags().GetBool("json")
 			yamlOut, _ := cmd.Flags().GetBool("yaml")
 			pretty, _ := cmd.Flags().GetBool("pretty")
 			failOnStr, _ := cmd.Flags().GetString("fail-on")
 			showScore, _ := cmd.Flags().GetBool("score")
 
+			// Prevent conflict
 			if jsonOut && yamlOut {
-				return fmt.Errorf("cannot use --json and --yaml together")
+				return fmt.Errorf("cannot combine --json and --yaml")
+			}
+
+			// Run rules
+			results := rules.RunAll(summary, cfg, onlyCats, exceptCats)
+
+			// Build score wrapper
+			scored := score.ScoreResult{
+				Score:   score.Score(results, cfg),
+				Results: wrapResultsWithCategory(results),
 			}
 
 			// ----- JSON -----
 			if jsonOut {
 				var data []byte
 				if pretty {
-					data, _ = json.MarshalIndent(combined, "", "  ")
+					data, _ = json.MarshalIndent(scored, "", "  ")
 				} else {
-					data, _ = json.Marshal(combined)
+					data, _ = json.Marshal(scored)
 				}
 				fmt.Println(string(data))
 				return evaluateDoctorExitCode(results, failOnStr)
@@ -65,42 +76,74 @@ supports CI-friendly exit codes with --fail-on.`,
 
 			// ----- YAML -----
 			if yamlOut {
-				data, _ := yaml.Marshal(combined)
+				data, _ := yaml.Marshal(scored)
 				fmt.Println(string(data))
 				return evaluateDoctorExitCode(results, failOnStr)
 			}
 
-			// ----- Pretty Text -----
+			// ----- PRETTY OUTPUT -----
 			if showScore {
-				fmt.Printf("Project Health Score: %d/100\n\n", combined.Score)
+				fmt.Printf("Project Health Score: %d/100\n\n", scored.Score)
 			}
 
-			if len(results) == 0 {
-				fmt.Println("No issues found. Project looks healthy!")
-			} else {
-				fmt.Println("Doctor Results:")
-				for _, r := range results {
-					fmt.Printf("[%s] %s: %s\n", r.Level, r.ID, r.Message)
-					if r.File != "" {
-						fmt.Printf("  File: %s\n", r.File)
-					}
-				}
-			}
+			printDoctorPretty(results)
 
 			return evaluateDoctorExitCode(results, failOnStr)
 		},
 	}
 
+	// Flags
+	cmd.Flags().StringSlice("only", []string{}, "Only run rules from these categories (comma-separated)")
+	cmd.Flags().StringSlice("except", []string{}, "Exclude rules from these categories (comma-separated)")
 	cmd.Flags().Bool("json", false, "Output results in JSON format")
 	cmd.Flags().Bool("yaml", false, "Output results in YAML format")
 	cmd.Flags().Bool("pretty", false, "Pretty-print JSON output")
-	cmd.Flags().String("fail-on", "error", "Fail on this severity or above (info|warn|error)")
+	cmd.Flags().String("fail-on", "error", "Fail on this severity or higher (info|warn|error)")
 	cmd.Flags().Bool("score", false, "Show project maturity score")
 
 	return cmd
 }
 
-func evaluateDoctorExitCode(results []rules.Result, failOnStr string) error {
+// Pretty-print grouped by category
+func printDoctorPretty(results []rules.Result) {
+	if len(results) == 0 {
+		fmt.Println("No issues found. Project looks healthy!")
+		return
+	}
+
+	fmt.Println("Doctor Results by Category:")
+	grouped := map[string][]rules.Result{}
+
+	for _, r := range results {
+		cat := rules.CategoryForRule(r.ID)
+		grouped[cat] = append(grouped[cat], r)
+	}
+
+	for cat, list := range grouped {
+		fmt.Printf("\n[%s]\n", strings.ToUpper(cat))
+		for _, r := range list {
+			fmt.Printf("  [%s] %s: %s\n", r.Level, r.ID, r.Message)
+			if r.File != "" {
+				fmt.Printf("    File: %s\n", r.File)
+			}
+		}
+	}
+}
+
+// Convert rules.Result → ScoreResult ScoredRule form
+func wrapResultsWithCategory(results []rules.Result) []score.ScoredRule {
+	out := []score.ScoredRule{}
+	for _, r := range results {
+		out = append(out, score.ScoredRule{
+			Result:   r,
+			Category: rules.CategoryForRule(r.ID),
+		})
+	}
+	return out
+}
+
+// Exit code logic (fail-on)
+func evaluateDoctorExitCode(results []rules.Result, failOn string) error {
 
 	highest := rules.Info
 	for _, r := range results {
@@ -109,19 +152,19 @@ func evaluateDoctorExitCode(results []rules.Result, failOnStr string) error {
 		}
 	}
 
-	var failOn rules.Level
-	switch strings.ToLower(failOnStr) {
+	var target rules.Level
+	switch strings.ToLower(failOn) {
 	case "info":
-		failOn = rules.Info
+		target = rules.Info
 	case "warn":
-		failOn = rules.Warn
+		target = rules.Warn
 	case "error":
-		failOn = rules.Error
+		target = rules.Error
 	default:
-		return fmt.Errorf("invalid --fail-on value: %s", failOnStr)
+		return fmt.Errorf("invalid value for --fail-on: %s", failOn)
 	}
 
-	if rules.SeverityRank(highest) >= rules.SeverityRank(failOn) {
+	if rules.SeverityRank(highest) >= rules.SeverityRank(target) {
 		switch highest {
 		case rules.Error:
 			os.Exit(2)
