@@ -12,6 +12,7 @@ import (
 	"github.com/jbakchr/hewd/internal/config"
 	"github.com/jbakchr/hewd/internal/rules"
 	"github.com/jbakchr/hewd/internal/scan"
+	"github.com/jbakchr/hewd/internal/score"
 )
 
 func newDoctorCmd() *cobra.Command {
@@ -23,61 +24,57 @@ Respects settings from .hewd/config.yaml. Produces structured output and
 supports CI-friendly exit codes with --fail-on.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			// Load project root
 			cwd, err := os.Getwd()
 			if err != nil {
 				return err
 			}
 
-			// Load config (missing config is not an error)
 			cfg, _ := config.Load(cwd)
-
-			// Perform directory scan
 			summary, err := scan.ScanDirectory(cwd)
 			if err != nil {
 				return err
 			}
 
-			// Run rules with config
 			results := rules.RunAll(summary, cfg)
+			combined := score.ScoreResult{
+				Score:   score.Score(results, cfg),
+				Results: results,
+			}
 
-			// Read flags
 			jsonOut, _ := cmd.Flags().GetBool("json")
 			yamlOut, _ := cmd.Flags().GetBool("yaml")
 			pretty, _ := cmd.Flags().GetBool("pretty")
 			failOnStr, _ := cmd.Flags().GetString("fail-on")
+			showScore, _ := cmd.Flags().GetBool("score")
 
-			// Validate incompatible flags
 			if jsonOut && yamlOut {
 				return fmt.Errorf("cannot use --json and --yaml together")
 			}
 
-			// -----------------------------------------------------------
-			// Output: JSON
-			// -----------------------------------------------------------
+			// ----- JSON -----
 			if jsonOut {
 				var data []byte
 				if pretty {
-					data, _ = json.MarshalIndent(results, "", "  ")
+					data, _ = json.MarshalIndent(combined, "", "  ")
 				} else {
-					data, _ = json.Marshal(results)
+					data, _ = json.Marshal(combined)
 				}
 				fmt.Println(string(data))
 				return evaluateDoctorExitCode(results, failOnStr)
 			}
 
-			// -----------------------------------------------------------
-			// Output: YAML
-			// -----------------------------------------------------------
+			// ----- YAML -----
 			if yamlOut {
-				data, _ := yaml.Marshal(results)
+				data, _ := yaml.Marshal(combined)
 				fmt.Println(string(data))
 				return evaluateDoctorExitCode(results, failOnStr)
 			}
 
-			// -----------------------------------------------------------
-			// Output: human-readable text
-			// -----------------------------------------------------------
+			// ----- Pretty Text -----
+			if showScore {
+				fmt.Printf("Project Health Score: %d/100\n\n", combined.Score)
+			}
+
 			if len(results) == 0 {
 				fmt.Println("No issues found. Project looks healthy!")
 			} else {
@@ -98,17 +95,13 @@ supports CI-friendly exit codes with --fail-on.`,
 	cmd.Flags().Bool("yaml", false, "Output results in YAML format")
 	cmd.Flags().Bool("pretty", false, "Pretty-print JSON output")
 	cmd.Flags().String("fail-on", "error", "Fail on this severity or above (info|warn|error)")
+	cmd.Flags().Bool("score", false, "Show project maturity score")
 
 	return cmd
 }
 
-// -----------------------------------------------------------------------------
-// Exit code evaluation
-// -----------------------------------------------------------------------------
-
 func evaluateDoctorExitCode(results []rules.Result, failOnStr string) error {
 
-	// Determine highest severity present
 	highest := rules.Info
 	for _, r := range results {
 		if rules.SeverityRank(r.Level) > rules.SeverityRank(highest) {
@@ -116,7 +109,6 @@ func evaluateDoctorExitCode(results []rules.Result, failOnStr string) error {
 		}
 	}
 
-	// Parse fail-on flag
 	var failOn rules.Level
 	switch strings.ToLower(failOnStr) {
 	case "info":
@@ -129,19 +121,16 @@ func evaluateDoctorExitCode(results []rules.Result, failOnStr string) error {
 		return fmt.Errorf("invalid --fail-on value: %s", failOnStr)
 	}
 
-	// Compare severities
 	if rules.SeverityRank(highest) >= rules.SeverityRank(failOn) {
-		// Map severity to distinct exit codes
 		switch highest {
 		case rules.Error:
 			os.Exit(2)
 		case rules.Warn:
 			os.Exit(1)
 		case rules.Info:
-			os.Exit(1) // info only fails if fail-on=info
+			os.Exit(1)
 		}
 	}
 
-	// OK
 	return nil
 }
