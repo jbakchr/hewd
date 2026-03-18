@@ -13,7 +13,7 @@ import (
 // It respects include/exclude settings from `.hewd/config.yaml`.
 func ScanDirectory(root string) (*Summary, error) {
 	// Load config if available
-	cfg, _ := config.Load(".") // ignore errors; missing config is allowed
+	cfg, _ := config.Load(root) // missing config is not an error
 
 	s := &Summary{
 		Languages:     make(map[string]int),
@@ -27,59 +27,52 @@ func ScanDirectory(root string) (*Summary, error) {
 		s.Documentation[name] = false
 	}
 
-	// Preprocess include/exclude patterns
-	includes := cfg.Scan.Include
-	excludes := cfg.Scan.Exclude
-
-	// Helper: check if any exclude prefix matches this path
-	isExcluded := func(rel string) bool {
-		for _, ex := range excludes {
-			if strings.HasPrefix(rel, ex) {
-				return true
-			}
-		}
-		return false
-	}
-
-	// Helper: if includes list is not empty, only allow matches
-	isIncluded := func(rel string) bool {
-		if len(includes) == 0 {
-			return true // no includes → allow all
-		}
-		for _, inc := range includes {
-			if strings.HasPrefix(rel, inc) {
-				return true
-			}
-		}
-		return false
-	}
+	// Normalize include/exclude settings
+	includes := normalizePaths(cfg.Scan.Include)
+	excludes := normalizePaths(cfg.Scan.Exclude)
 
 	err := filepath.Walk(root, func(path string, info os.FileInfo, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
 		}
 
-		// Compute relative path for include/exclude logic
+		// Compute relative path consistently
 		rel, err := filepath.Rel(root, path)
 		if err != nil {
 			return err
 		}
+		rel = filepath.ToSlash(rel)
 
-		// Never exclude the root folder itself
+		// Skip root
 		if rel == "." {
 			return nil
 		}
 
-		// Exclusion takes precedence
-		if isExcluded(rel) {
+		// ------------------------------------------------------------------
+		// Always exclude the .hewd/ directory (internal metadata)
+		// ------------------------------------------------------------------
+		if strings.HasPrefix(rel, ".hewd/") {
 			if info.IsDir() {
 				return filepath.SkipDir
 			}
 			return nil
 		}
 
-		// Inclusion check (only if includes exist)
-		if !isIncluded(rel) {
+		// ------------------------------------------------------------------
+		// Exclude directories listed in config
+		// ------------------------------------------------------------------
+		if shouldExclude(rel, excludes) {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		// ------------------------------------------------------------------
+		// Include logic: if includes list is non-empty, then the file/dir
+		// MUST start with one of the include prefixes.
+		// ------------------------------------------------------------------
+		if len(includes) > 0 && !shouldInclude(rel, includes) {
 			return nil
 		}
 
@@ -91,7 +84,6 @@ func ScanDirectory(root string) (*Summary, error) {
 
 		// Count files
 		s.Files++
-
 		name := info.Name()
 
 		// ----------------------------------------------------------------------
@@ -114,7 +106,7 @@ func ScanDirectory(root string) (*Summary, error) {
 		// ----------------------------------------------------------------------
 		ext := strings.ToLower(filepath.Ext(name))
 		if ext != "" {
-			ext = ext[1:] // strip leading dot
+			ext = ext[1:] // strip dot
 			if langName, ok := RealLanguages[ext]; ok {
 				s.Languages[langName]++
 			}
@@ -128,4 +120,39 @@ func ScanDirectory(root string) (*Summary, error) {
 	}
 
 	return s, nil
+}
+
+// -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
+
+// normalizePaths ensures all paths use forward slashes for consistent prefix checks.
+func normalizePaths(paths []string) []string {
+	var out []string
+	for _, p := range paths {
+		p = filepath.ToSlash(p)
+		p = strings.TrimPrefix(p, "./")
+		out = append(out, p)
+	}
+	return out
+}
+
+// shouldExclude checks if a relative path matches any exclude prefix.
+func shouldExclude(rel string, excludes []string) bool {
+	for _, ex := range excludes {
+		if rel == ex || strings.HasPrefix(rel, ex+"/") {
+			return true
+		}
+	}
+	return false
+}
+
+// shouldInclude checks if a relative path matches at least one include prefix.
+func shouldInclude(rel string, includes []string) bool {
+	for _, inc := range includes {
+		if rel == inc || strings.HasPrefix(rel, inc+"/") {
+			return true
+		}
+	}
+	return false
 }
