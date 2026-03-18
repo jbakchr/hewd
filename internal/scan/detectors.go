@@ -1,15 +1,12 @@
 package scan
 
-// This file declares detection maps for languages, documentation assets,
-// and configuration assets. These maps are read by scanner.go,
-// keeping all domain knowledge centralized and easy to maintain.
+// This file centralizes all detection maps for languages,
+// documentation assets, and configuration files.
 
 // -----------------------------------------------------------------------------
 // Language Detection
 // -----------------------------------------------------------------------------
 
-// RealLanguages maps file extensions (without leading ".") to human-friendly
-// language names. These values populate Summary.Languages.
 var RealLanguages = map[string]string{
 	"go":    "Go",
 	"js":    "JavaScript",
@@ -35,7 +32,7 @@ var RealLanguages = map[string]string{
 	"zsh":  "Zsh",
 	"ps1":  "PowerShell",
 
-	// Markup / data formats
+	// Markup / Data formats
 	"md":       "Markdown",
 	"markdown": "Markdown",
 	"txt":      "Plain Text",
@@ -51,9 +48,6 @@ var RealLanguages = map[string]string{
 // Documentation Detection
 // -----------------------------------------------------------------------------
 
-// DocumentationAssets maps filenames to human-friendly category labels.
-// scanner.go will populate Summary.Documentation and Summary.DocsFound based
-// on these entries.
 var DocumentationAssets = map[string]string{
 	"README.md":          "Project Overview",
 	"CONTRIBUTING.md":    "Contribution Guide",
@@ -64,11 +58,9 @@ var DocumentationAssets = map[string]string{
 }
 
 // -----------------------------------------------------------------------------
-// Configuration File Detection
+// Config Detection
 // -----------------------------------------------------------------------------
 
-// ConfigAssets maps filenames to classification strings. The scanner uses this
-// to populate Summary.ConfigFiles.
 var ConfigAssets = map[string]string{
 	"go.mod":             "Go Module",
 	"package.json":       "Node Package Manifest",
@@ -77,7 +69,5 @@ var ConfigAssets = map[string]string{
 	"docker-compose.yml": "Docker Compose Config",
 	"openapi.yaml":       "OpenAPI Specification",
 	"openapi.yml":        "OpenAPI Specification",
-
-	// Added after your bug report — ensures .gitignore is detected correctly:
-	".gitignore": "Git Ignore File",
+	".gitignore":         "Git Ignore File",
 }

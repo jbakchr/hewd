@@ -2,45 +2,25 @@ package cmd
 
 import (
 	"fmt"
-	"sort"
 
-	iscan "github.com/jbakchr/hewd/internal/scan"
+	"github.com/jbakchr/hewd/internal/scan"
 )
 
-//
-// ───────────────────────────────────────────────────────────────
-//   Output: Pretty Print
-// ───────────────────────────────────────────────────────────────
-//
-
-func printScanSummary(s *iscan.Summary) {
+func printScanSummary(s *scan.Summary) {
 	fmt.Println("Project Summary:")
 	fmt.Printf("  Files:       %d\n", s.Files)
 	fmt.Printf("  Directories: %d\n", s.Directories)
 
-	//
-	// Languages
-	//
 	fmt.Println()
 	fmt.Println("Languages detected:")
-
 	if len(s.Languages) == 0 {
 		fmt.Println("  (none detected)")
 	} else {
-		langs := make([]string, 0, len(s.Languages))
-		for lang := range s.Languages {
-			langs = append(langs, lang)
-		}
-		sort.Strings(langs)
-
-		for _, lang := range langs {
-			fmt.Printf("  %s (%d files)\n", lang, s.Languages[lang])
+		for lang, count := range s.Languages {
+			fmt.Printf("  %s (%d files)\n", lang, count)
 		}
 	}
 
-	//
-	// Documentation
-	//
 	fmt.Println()
 	fmt.Println("Documentation presence:")
 	for doc, exists := range s.Documentation {
@@ -64,9 +44,6 @@ func printScanSummary(s *iscan.Summary) {
 		}
 	}
 
-	//
-	// Configuration
-	//
 	fmt.Println()
 	fmt.Println("Configuration files:")
 	if len(s.ConfigFiles) == 0 {

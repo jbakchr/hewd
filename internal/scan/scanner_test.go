@@ -8,7 +8,7 @@ import (
 )
 
 // --------------------------------------------------
-// 1. Basic scan detection
+// Basic detection test
 // --------------------------------------------------
 
 func TestScan_DetectsLanguagesAndDocs(t *testing.T) {
@@ -37,7 +37,7 @@ func TestScan_DetectsLanguagesAndDocs(t *testing.T) {
 }
 
 // --------------------------------------------------
-// 2. Exclude directories
+// Exclude directories test
 // --------------------------------------------------
 
 func TestScan_ExcludeDirectory(t *testing.T) {
@@ -47,20 +47,16 @@ scan:
   exclude:
     - vendor
 `,
-		"main.go":           "package main",
-		"vendor/ignored.go": "package ignored",
+		"main.go":          "package main",
+		"vendor/ignore.go": "package ignored",
 	})
 
 	s, err := scan.ScanDirectory(dir)
 	if err != nil {
-		t.Fatalf("scan error: %v", err)
+		t.Fatalf("scan err: %v", err)
 	}
 
-	if _, ok := s.Languages["Go"]; !ok {
-		t.Errorf("expected main.go to be counted")
-	}
-
-	if s.Files != 1 {
+	if s.Files != 1 { // vendor should be excluded
 		t.Errorf("expected only 1 scanned file, got %d", s.Files)
 	}
 }

@@ -5,29 +5,33 @@ import (
 	"github.com/jbakchr/hewd/internal/rules"
 )
 
-// ScoreResult wraps score + rule results (for JSON/YAML output)
-type ScoreResult struct {
-	Score   int            `json:"score" yaml:"score"`
-	Results []rules.Result `json:"results" yaml:"results"`
+// ScoredRule augments rules.Result with a category field for structured output.
+type ScoredRule struct {
+	rules.Result
+	Category string `json:"category" yaml:"category"`
 }
 
-// Score computes a 0–100 maturity score based on rule severities.
-// Uses optional config weights to override severity levels.
-func Score(results []rules.Result, cfg *config.Config) int {
+// ScoreResult wraps the overall score and rule results.
+type ScoreResult struct {
+	Score   int          `json:"score" yaml:"score"`
+	Results []ScoredRule `json:"results" yaml:"results"`
+}
 
-	// Base score
+// Score computes a health score between 0 and 100 based on rule severities.
+// Uses config.Weights to override severity levels when defined.
+func Score(results []rules.Result, cfg *config.Config) int {
 	score := 100
 
 	for _, r := range results {
-		// Apply config severity overrides
 		level := r.Level
+
+		// Apply severity override if present
 		if cfg != nil && cfg.Weights != nil {
 			if override, ok := cfg.Weights[r.ID]; ok {
 				level = rules.LevelFromInt(override)
 			}
 		}
 
-		// Subtract points based on severity
 		switch level {
 		case rules.Error:
 			score -= 10
@@ -39,10 +43,11 @@ func Score(results []rules.Result, cfg *config.Config) int {
 	}
 
 	if score < 0 {
-		return 0
+		score = 0
 	}
 	if score > 100 {
-		return 100
+		score = 100
 	}
+
 	return score
 }

@@ -8,29 +8,22 @@ import (
 	"github.com/jbakchr/hewd/internal/scan"
 )
 
-// This file contains additional (non-core) structural and metadata rules.
-// These focus on heuristic project maturity indicators, large-repo hygiene,
-// and basic documentation expectations for real-world repositories.
-
 func init() {
-	RegisterRule("STRUCT_NO_DOCS_DIR_FOR_LARGE_REPO", RuleLargeRepoNoDocsDir)
-	RegisterRule("STRUCT_STALE_CHANGELOG", RuleStaleChangelog)
-	RegisterRule("STRUCT_STALE_README", RuleStaleReadme)
+	RegisterRule("STRUCT_NO_DOCS_DIR_FOR_LARGE_REPO", "structure", RuleLargeRepoNoDocsDir)
+	RegisterRule("STRUCT_STALE_CHANGELOG", "structure", RuleStaleChangelog)
+	RegisterRule("STRUCT_STALE_README", "structure", RuleStaleReadme)
 }
 
-// -----------------------------------------------------------------------------
 // 1. Large repo but no docs/ directory
-// -----------------------------------------------------------------------------
-
 func RuleLargeRepoNoDocsDir(s interface{}) []Result {
-	summary := s.(*scan.Summary)
+	sum := s.(*scan.Summary)
 
-	if summary.Files < 50 {
-		return nil // heuristic: only care for larger projects
+	if sum.Files < 50 {
+		return nil
 	}
 
 	hasDocsDir := false
-	for _, files := range summary.DocsFound {
+	for _, files := range sum.DocsFound {
 		for _, p := range files {
 			if strings.Contains(p, "docs/") {
 				hasDocsDir = true
@@ -50,18 +43,15 @@ func RuleLargeRepoNoDocsDir(s interface{}) []Result {
 	return nil
 }
 
-// -----------------------------------------------------------------------------
-// 2. Changelog exists but is stale (last modified long ago)
-// -----------------------------------------------------------------------------
-
+// 2. Changelog exists but stale (not updated in a long time)
 func RuleStaleChangelog(s interface{}) []Result {
-	summary := s.(*scan.Summary)
+	sum := s.(*scan.Summary)
 
-	if !summary.Documentation["CHANGELOG.md"] {
+	if !sum.Documentation["CHANGELOG.md"] {
 		return nil
 	}
 
-	paths := summary.DocsFound["Changelog"]
+	paths := sum.DocsFound["Changelog"]
 	if len(paths) == 0 {
 		return nil
 	}
@@ -73,7 +63,6 @@ func RuleStaleChangelog(s interface{}) []Result {
 		return nil
 	}
 
-	// Heuristic: warn if changelog hasn't been updated for ~180 days.
 	const staleDays = 180
 	age := daysSince(info.ModTime())
 
@@ -89,18 +78,15 @@ func RuleStaleChangelog(s interface{}) []Result {
 	return nil
 }
 
-// -----------------------------------------------------------------------------
-// 3. README.md appears stale (not updated recently)
-// -----------------------------------------------------------------------------
-
+// 3. README.md stale
 func RuleStaleReadme(s interface{}) []Result {
-	summary := s.(*scan.Summary)
+	sum := s.(*scan.Summary)
 
-	if !summary.Documentation["README.md"] {
+	if !sum.Documentation["README.md"] {
 		return nil
 	}
 
-	paths := summary.DocsFound["Project Overview"]
+	paths := sum.DocsFound["Project Overview"]
 	if len(paths) == 0 {
 		return nil
 	}
@@ -112,7 +98,6 @@ func RuleStaleReadme(s interface{}) []Result {
 		return nil
 	}
 
-	// Heuristic: warn if README hasn't been updated for ~365 days.
 	const staleDays = 365
 	age := daysSince(info.ModTime())
 
@@ -127,10 +112,6 @@ func RuleStaleReadme(s interface{}) []Result {
 
 	return nil
 }
-
-// -----------------------------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------------------------
 
 func daysSince(t time.Time) int {
 	return int(time.Since(t).Hours() / 24)

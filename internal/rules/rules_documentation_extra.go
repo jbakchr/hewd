@@ -7,30 +7,21 @@ import (
 	"github.com/jbakchr/hewd/internal/scan"
 )
 
-// This file contains additional (non-core) documentation rules.
-//
-// These rules focus on project documentation maturity, structure,
-// and content quality. They complement the core rules defined
-// in rules_documentation.go.
-
 func init() {
-	RegisterRule("DOCS_EMPTY_FOLDER", RuleDocsFolderExistsButEmpty)
-	RegisterRule("DOC_README_NO_USAGE", RuleReadmeMissingUsageSection)
-	RegisterRule("DOC_CHANGELOG_EMPTY", RuleChangelogExistsButEmpty)
-	RegisterRule("DOC_MANY_MD_NO_DOCS_DIR", RuleTooManyMarkdownFilesWithoutDocsFolder)
+	RegisterRule("DOCS_EMPTY_FOLDER", "documentation", RuleDocsFolderExistsButEmpty)
+	RegisterRule("DOC_README_NO_USAGE", "documentation", RuleReadmeMissingUsageSection)
+	RegisterRule("DOC_CHANGELOG_EMPTY", "documentation", RuleChangelogExistsButEmpty)
+	RegisterRule("DOC_MANY_MD_NO_DOCS_DIR", "documentation", RuleTooManyMarkdownFilesWithoutDocsFolder)
 }
 
-// -----------------------------------------------------------------------------
 // 1. docs/ exists but appears empty
-// -----------------------------------------------------------------------------
-
 func RuleDocsFolderExistsButEmpty(s interface{}) []Result {
-	summary := s.(*scan.Summary)
+	sum := s.(*scan.Summary)
 
 	hasDocsDir := false
 	hasFilesInside := false
 
-	for _, files := range summary.DocsFound {
+	for _, files := range sum.DocsFound {
 		for _, p := range files {
 			if strings.Contains(p, "docs/") {
 				hasDocsDir = true
@@ -39,7 +30,6 @@ func RuleDocsFolderExistsButEmpty(s interface{}) []Result {
 		}
 	}
 
-	// If docs/ exists but no files were actually detected inside it
 	if hasDocsDir && !hasFilesInside {
 		return []Result{{
 			ID:      "DOCS_EMPTY_FOLDER",
@@ -51,18 +41,15 @@ func RuleDocsFolderExistsButEmpty(s interface{}) []Result {
 	return nil
 }
 
-// -----------------------------------------------------------------------------
 // 2. README.md missing a “Usage” section
-// -----------------------------------------------------------------------------
-
 func RuleReadmeMissingUsageSection(s interface{}) []Result {
-	summary := s.(*scan.Summary)
+	sum := s.(*scan.Summary)
 
-	if !summary.Documentation["README.md"] {
-		return nil // Another rule already checks for missing README.
+	if !sum.Documentation["README.md"] {
+		return nil
 	}
 
-	paths := summary.DocsFound["Project Overview"]
+	paths := sum.DocsFound["Project Overview"]
 	if len(paths) == 0 {
 		return nil
 	}
@@ -85,18 +72,15 @@ func RuleReadmeMissingUsageSection(s interface{}) []Result {
 	return nil
 }
 
-// -----------------------------------------------------------------------------
-// 3. CHANGELOG.md exists but is empty or extremely short
-// -----------------------------------------------------------------------------
-
+// 3. CHANGELOG.md exists but appears empty or tiny
 func RuleChangelogExistsButEmpty(s interface{}) []Result {
-	summary := s.(*scan.Summary)
+	sum := s.(*scan.Summary)
 
-	if !summary.Documentation["CHANGELOG.md"] {
+	if !sum.Documentation["CHANGELOG.md"] {
 		return nil
 	}
 
-	paths := summary.DocsFound["Changelog"]
+	paths := sum.DocsFound["Changelog"]
 	if len(paths) == 0 {
 		return nil
 	}
@@ -118,18 +102,14 @@ func RuleChangelogExistsButEmpty(s interface{}) []Result {
 	return nil
 }
 
-// -----------------------------------------------------------------------------
-// 4. Many markdown files but no docs/ folder exists
-// -----------------------------------------------------------------------------
-
+// 4. Many Markdown files but no docs/ folder
 func RuleTooManyMarkdownFilesWithoutDocsFolder(s interface{}) []Result {
-	summary := s.(*scan.Summary)
+	sum := s.(*scan.Summary)
 
 	mdCount := 0
 	hasDocsDir := false
 
-	// Detect docs/ folder
-	for _, list := range summary.DocsFound {
+	for _, list := range sum.DocsFound {
 		for _, f := range list {
 			if strings.Contains(f, "docs/") {
 				hasDocsDir = true
@@ -137,8 +117,7 @@ func RuleTooManyMarkdownFilesWithoutDocsFolder(s interface{}) []Result {
 		}
 	}
 
-	// Count Markdown files using language detection
-	if count, ok := summary.Languages["Markdown"]; ok {
+	if count, ok := sum.Languages["Markdown"]; ok {
 		mdCount = count
 	}
 

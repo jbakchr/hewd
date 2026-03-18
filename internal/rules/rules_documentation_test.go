@@ -8,7 +8,7 @@ import (
 )
 
 func TestRuleReadmeMissing(t *testing.T) {
-	s := &scan.Summary{
+	summary := &scan.Summary{
 		Documentation: map[string]bool{
 			"README.md": false,
 		},
@@ -17,12 +17,13 @@ func TestRuleReadmeMissing(t *testing.T) {
 		ConfigFiles: map[string][]string{},
 	}
 
-	results := rules.RuleReadmeMissing(s)
+	results := rules.RuleReadmeMissing(summary)
+
 	if len(results) == 0 {
-		t.Fatalf("expected rule to trigger, got 0 results")
+		t.Fatal("RuleReadmeMissing should trigger")
 	}
 
 	if results[0].ID != "DOC_README_MISSING" {
-		t.Errorf("expected DOC_README_MISSING, got %s", results[0].ID)
+		t.Fatalf("expected DOC_README_MISSING, got %s", results[0].ID)
 	}
 }

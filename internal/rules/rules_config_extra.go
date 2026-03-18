@@ -6,27 +6,20 @@ import (
 	"github.com/jbakchr/hewd/internal/scan"
 )
 
-// This file contains additional configuration and CI-related rules.
-// These rules cover areas such as git hygiene, CI workflow existence,
-// and containerization best practices.
-
 func init() {
-	RegisterRule("CFG_DOCKER_NO_COMPOSE", RuleHasDockerfileButNoCompose)
-	RegisterRule("CFG_NO_GITIGNORE", RuleMissingGitignore)
-	RegisterRule("CFG_GITHUB_NO_WORKFLOWS", RuleCIFolderButNoWorkflows)
+	RegisterRule("CFG_DOCKER_NO_COMPOSE", "config", RuleHasDockerfileButNoCompose)
+	RegisterRule("CFG_NO_GITIGNORE", "config", RuleMissingGitignore)
+	RegisterRule("CFG_GITHUB_NO_WORKFLOWS", "config", RuleCIFolderButNoWorkflows)
 }
 
-// -----------------------------------------------------------------------------
 // 1. Dockerfile present but no docker-compose.yml
-// -----------------------------------------------------------------------------
-
 func RuleHasDockerfileButNoCompose(s interface{}) []Result {
-	summary := s.(*scan.Summary)
+	sum := s.(*scan.Summary)
 
-	hasDockerfile := len(summary.ConfigFiles["Docker Build Config"]) > 0
-	hasCompose := len(summary.ConfigFiles["Docker Compose Config"]) > 0
+	hasDocker := len(sum.ConfigFiles["Docker Build Config"]) > 0
+	hasCompose := len(sum.ConfigFiles["Docker Compose Config"]) > 0
 
-	if !hasDockerfile {
+	if !hasDocker {
 		return nil
 	}
 
@@ -35,22 +28,18 @@ func RuleHasDockerfileButNoCompose(s interface{}) []Result {
 			ID:      "CFG_DOCKER_NO_COMPOSE",
 			Level:   Info,
 			Message: "Dockerfile found but no docker-compose.yml present.",
-			File:    first(summary.ConfigFiles["Docker Build Config"]),
+			File:    first(sum.ConfigFiles["Docker Build Config"]),
 		}}
 	}
 
 	return nil
 }
 
-// -----------------------------------------------------------------------------
-// 2. .gitignore should exist in most projects
-// -----------------------------------------------------------------------------
-
+// 2. Missing .gitignore
 func RuleMissingGitignore(s interface{}) []Result {
-	summary := s.(*scan.Summary)
+	sum := s.(*scan.Summary)
 
-	// Detect via ConfigFiles
-	if len(summary.ConfigFiles["Git Ignore File"]) > 0 {
+	if len(sum.ConfigFiles["Git Ignore File"]) > 0 {
 		return nil
 	}
 
@@ -61,29 +50,25 @@ func RuleMissingGitignore(s interface{}) []Result {
 	}}
 }
 
-// -----------------------------------------------------------------------------
-// 3. .github folder present but no workflow files
-// -----------------------------------------------------------------------------
-
+// 3. .github folder exists but no workflow files
 func RuleCIFolderButNoWorkflows(s interface{}) []Result {
-	summary := s.(*scan.Summary)
+	sum := s.(*scan.Summary)
 
-	hasGithubFolder := false
+	hasGithub := false
 	hasWorkflows := false
 
-	for cfgType, files := range summary.ConfigFiles {
+	for _, files := range sum.ConfigFiles {
 		for _, f := range files {
 			if strings.Contains(f, ".github/") {
-				hasGithubFolder = true
+				hasGithub = true
 			}
-			if cfgType == ".github/workflows" ||
-				strings.Contains(f, ".github/workflows/") {
+			if strings.Contains(f, ".github/workflows/") {
 				hasWorkflows = true
 			}
 		}
 	}
 
-	if hasGithubFolder && !hasWorkflows {
+	if hasGithub && !hasWorkflows {
 		return []Result{{
 			ID:      "CFG_GITHUB_NO_WORKFLOWS",
 			Level:   Warn,
