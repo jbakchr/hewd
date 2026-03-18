@@ -59,6 +59,7 @@ func newDiffCmd() *cobra.Command {
 				return fmt.Errorf("new report not found: %s", newPath)
 			}
 
+			fmt.Println("\n===== OVERALL SCORE =====")
 			fmt.Printf("Old report score: %d\n", oldReport.Score)
 			fmt.Printf("New report score: %d\n", newReport.Score)
 
@@ -66,6 +67,7 @@ func newDiffCmd() *cobra.Command {
 			delta := newReport.Score - oldReport.Score
 			fmt.Printf("Score change: %+d\n", delta)
 
+			fmt.Println("\n===== CATEGORY SCORES =====")
 			// Category score deltas
 			docDelta := newReport.CategoryScores.Documentation - oldReport.CategoryScores.Documentation
 			cfgDelta := newReport.CategoryScores.Config - oldReport.CategoryScores.Config
@@ -98,7 +100,7 @@ func newDiffCmd() *cobra.Command {
 				oldIDs[r.ID] = true
 			}
 
-			fmt.Println()
+			fmt.Println("\n===== NEW ISSUES =====")
 			fmt.Println("New issues:")
 			foundNew := false
 			for _, r := range newReport.Results {
@@ -119,7 +121,7 @@ func newDiffCmd() *cobra.Command {
 				newIDs[r.ID] = true
 			}
 
-			fmt.Println()
+			fmt.Println("\n===== RESOLVED ISSUES =====")
 			fmt.Println("Resolved issues:")
 			foundResolved := false
 			for _, r := range oldReport.Results {
