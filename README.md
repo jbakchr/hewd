@@ -1,246 +1,399 @@
-# hewd
-_A fast, zero‑dependency CLI tool for initializing, scanning, and diagnosing documentation and configuration assets in software projects._
+# _**hewd**_
+
+_A project health, documentation, and structure toolkit for modern software repositories._
+
+hewd is a fast, dependency-free CLI that analyzes your repository’s documentation, configuration files, project structure, and code layout — then produces human‑friendly reports, machine‑readable output, badges, and even automated fixes.
+
+It is designed to help teams maintain consistent repository quality, improve documentation health, track changes over time, and enforce standards in continuous integration environments.
 
 ---
 
 ## 📑 Table of Contents
 
 - [Features](#-features)
-- [Installation](#-installation)
-- [Quick Start](#-quick-start)
+- [Installation](#installation)
+- [Quick-start](#-quick-start)
 - [Commands](#-commands)
-  - [hewd init](#hewd-init)
   - [hewd scan](#hewd-scan)
-  - [hewd](#hewd-doctor)
-- [Output Formats](#-output-formats)
-- [Configuration (WIP)](#-configuration-wip)
-- [Roadmap](#-roadmap)
-- [License](#-license)
-- [Project Links](#-project-links)
+  - [hewd doctor](#hewd-doctor)
+  - [hewd fix](#hewd-fix)
+  - [hewd badge](#hewd-badge)
+  - [hewd export](#hewd-export)
+  - [hewd-diff](#hewd-diff)
+  - [hewd init](#hewd-init)
+- [Machine‑Readable Output](#machine-readable-output)
+- [github-action](#-github-action-integration)
+- [Configuration](#configuration)
+- [Roadmap]
+- [License](#license)
 
 ---
 
 ## ✨ Features
 
-- 🔍 Scan project structure to detect languages, documentation, config files, and metadata
-- 🩺 Run diagnostics to identify missing, malformed, or inconsistent documentation assets
-- 🧰 Initialize config for project‑wide heuristics (planned/experimental)
-- 📤 Structured output formats (--json, --yaml, --pretty)
-- 🚀 Single static binary, no external runtime required
-- 🛠️ Designed for CI pipelines, documentation bots, and developer tooling
+### 🔍 Project Scanning
+
+hewd scans your repository to detect:
+
+- programming languages
+- documentation files
+- configuration files
+- CI workflows
+- project metadata
+- docs directories
+- file and directory counts
+
+### 🩺 Diagnostic Engine (`hewd doctor`)
+
+Runs category‑aware rules to identify:
+
+- missing or incomplete docs
+- missing LICENSE/CHANGELOG/CONTRIBUTING
+- missing or incomplete CI workflows
+- missing docs/ structure
+- stale documentation
+- multi‑language repos without architecture docs
+
+Includes:
+
+- per‑category scoring
+- overall health score
+- severity levels (info/warn/error)
+
+### 🧮 Scoring
+
+- **Overall project score (0–100)**
+- **Category scores:** documentation, config, structure
+- **Machine‑readable scoring API**
+- **Configurable severity overrides**
+
+### 🧰 Auto‑Fix (`hewd fix`)
+
+Automatically generates missing assets:
+
+- LICENSE
+- CONTRIBUTING.md
+- CHANGELOG.md
+- `.github/workflows/ci.yml`
+- `docs/` directory
+
+Supports:
+
+- dry‑run (default)
+- `--apply` (write changes)
+
+### 🏷️ Badge Generator (`hewd badge`)
+
+Generates clean SVG badges for:
+
+- overall score
+- category scores (future)
+
+Perfect for READMEs and dashboards.
+
+### 🧾 Machine‑Readable Export (`hewd export`)
+
+Outputs a stable JSON schema containing:
+
+- project scores
+- all rule results
+- fixable issues
+- metadata
+- timestamps
+- version info
+
+### 🔁 Diff Engine (`hewd diff`)
+
+Compares two hewd JSON exports (e.g., main branch vs PR branch):
+
+- score change
+- category score changes
+- new issues introduced
+- resolved issues
+- pretty‑printed diff
+- arrows for direction (↑ ↓ ↔)
+- section headers and separators
+
+Perfect for CI regression detection.
+
+### 🤖 GitHub Action Integration
+
+- runs doctor on pull requests
+- posts Markdown reports
+- updates PR comments instead of spamming
+- supports badges, diff, and scoring
+- uses exit codes for CI enforcement
 
 ---
 
 ## 📦 Installation
 
-> **Note**: Installation methods below are placeholders until releases are available.
+_Installation methods are placeholders until releases are published._
 
-### Download binary (future)
-
-```bash
-curl -sSL https://github.com/<org>/<repo>/releases/latest/download/hewd \
-  -o /usr/local/bin/hewd && chmod +x /usr/local/bin/hewd
-```
-
-### Go install (future)
+### Go Install (future)
 
 ```bash
-go install github.com/<org>/<repo>/cmd/hewd@latest
+go install github.com/jbakchr/hewd/cmd/hewd@latest
 ```
 
-### Homebrew (planned)
+### Manual Build
 
 ```bash
-brew install <org>/tap/hewd
+git clone https://github.com/jbakchr/hewd
+cd hewd
+go build -o hewd ./cmd/hewd
 ```
-
----
 
 ## 🚀 Quick Start
 
-After installing:
+### Scan the project:
 
 ```bash
 hewd scan --pretty
 ```
 
-Example output:
+### Run diagnostics:
 
 ```bash
-Project Summary:
-  Files:       139
-  Directories: 100
+hewd doctor
+```
 
-Languages detected:
-  Go (6 files)
-  Markdown (1 files)
-  YAML (1 files)
+### Generate a Markdown report:
 
-Documentation:
-  README.md: present
-  LICENSE: missing
-  CONTRIBUTING.md: missing
+```bash
+hewd doctor --md > health.md
+```
 
-Scan complete.
+### Save a machine‑readable report:
+
+```bash
+hewd export --output hewd.json
+```
+
+### Compare two reports:
+
+```bash
+hewd diff old.json new.json
 ```
 
 ---
 
 ## 📚 Commands
 
-### `hewd init`
-
-Initialize project‑level configuration or metadata.
-
-```bash
-hewd init
-```
-
-#### Current behavior (WIP):
-
-- Creates basic project configuration
-- Prepares directory metadata used by other commands
-
-> `init` does not support --json, --yaml, or --pretty.
-
----
-
 ### `hewd scan`
 
-Analyze the repository and surface structured information.
+Scans the directory and outputs:
 
-```bash
-hewd scan
-hewd scan --json
-hewd scan --json --pretty
-hewd scan --yaml
+- languages
+- documentation files
+- configuration files
+- project stats
+
+Supports:
+
 ```
-
-Detects (planned & evolving):
-
-- Programming languages present
-- Documentation assets (README.md, docs/, ADRs, etc.)
-- Project metadata (LICENSE, CHANGELOG, module files, etc.)
-- Configuration surface (Dockerfiles, CI configs, manifests)
-
-Example **YAML** output:
-
-```bash
-files: 139
-directories: 100
-languages:
-    Go: 6
-    Markdown: 1
-    YAML: 1
-documentation:
-    CONTRIBUTING.md: false
-    LICENSE: false
-    README.md: true
+--json
+--yaml
+--pretty
 ```
 
 ---
 
-### hewd doctor
+### `hewd doctor`
 
-Run diagnostics on the project structure.
+Runs all diagnostics and produces:
 
-```bash
-hewd doctor
-hewd doctor --json
-hewd doctor --json --pretty
-hewd doctor --yaml
-```
+- issues grouped by category
+- scoring
+- JSON/YAML/Markdown output
+- CI‑friendly failures
 
-Checks (current + roadmap):
-
-- Missing or malformed documentation
-- Inconsistent file structure
-- Undeclared or unused files
-- Gaps in config or discovery metadata
-- Areas that would benefit from documentation templates
-
-Example **JSON** (_pretty_) output:
+Options:
 
 ```bash
-{
-  "Files": 139,
-  "Directories": 100,
-  "Languages": {
-    "Go": 6,
-    "Markdown": 1,
-    "YAML": 1
-  },
-  "Documentation": {
-    "CONTRIBUTING.md": false,
-    "LICENSE": false,
-    "README.md": true
-  }
-}
+--json
+--yaml
+--md
+--only
+--except
+--score
+--category-score
+--fail-on=info|warn|error
 ```
 
 ---
 
-## 🧩 Output Formats
+### `hewd fix`
 
-### --json
+Dry-run by default:
 
-Structured machine‑readable output for pipelines.
-
-### --yaml
-
-Human‑friendly structured output.
-
-### --pretty
-
-Rich text output for terminal use.
-
-> Output flags apply to `scan` and `doctor`, **not** `init`.
-
-## ⚙️ Configuration (WIP)
-
-`hewd init` _may_ generate:
-
+```bash
+hewd fix
 ```
+
+Apply fixes:
+
+```bash
+hewd fix --apply
+```
+
+---
+
+### `hewd badge`
+
+Generate a score badge:
+
+```bash
+hewd badge --output badge.svg
+```
+
+---
+
+### `hewd export`
+
+Output machine‑readable project health:
+
+```bash
+hewd export --output hewd.json
+```
+
+---
+
+### `hewd diff`
+
+Compare two hewd reports:
+
+```bash
+hewd diff old.json new.json
+```
+
+Outputs:
+
+- score delta
+- category deltas
+- new issues
+- resolved issues
+- structured and readable formatting
+
+Future:
+
+- --json, --yaml, --md diff output
+- regression gating flags
+
+---
+
+### `hewd init`
+
+Initializes:
+
+- .hewd/ directory
+- default project configuration
+
+---
+
+## 🧾 Machine‑Readable Output
+
+All structured output uses the MachineOutput schema:
+
+- schemaVersion
+- hewdVersion
+- generatedAt
+- score
+- categoryScores
+- results
+- fixable
+
+Supports:
+
+- JSON
+- YAML
+- Markdown (rendered from JSON)
+
+These outputs power:
+
+- dashboards
+- GitHub Action PR comments
+- diff comparisons
+- trend tracking
+
+---
+
+## 🤖 GitHub Action
+
+The repository includes a custom GitHub Action that:
+
+- Runs hewd on PRs
+- Builds the hewd binary
+- Posts Markdown reports
+- Updates PR comments (no duplication)
+- Uploads reports as artifacts
+- Supports automatic regression detection (future)
+
+Example:
+
+```bash
+- uses: ./.github/actions/hewd-action
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    pr-comment: true
+    md-report: true
+```
+
+---
+
+## ⚙️ Configuration
+
+`hewd init` generates:
+
+```bash
 .hewd/
   config.yaml
 ```
 
-A future configuration example:
+Supports:
 
-```
-project_name: my-service
+- rule enabling/disabling
+- severity weight overrides
+- scanner include/exclude paths
+
+Example:
+
+```bash
+rules:
+  DOC_README_MISSING: true
+weights:
+  DOC_LICENSE_MISSING: 3
 scan:
-  include:
-    - src
-    - cmd
+  include: []
   exclude:
+    - node_modules
     - vendor
-doctor:
-  enable_checks:
-    - docs
-    - config
-    - metadata
 ```
 
 ---
 
 ## 🗺️ Roadmap
 
-- [ ] Language + framework‑aware documentation heuristics
-- [ ] Project maturity scoring
-- [ ] ADR discovery & validation
-- [ ] GitHub Action / CI integration
-- [ ] Documentation template generation
-- [ ] Repo structure “smell” detection
-- [ ] LLM‑assisted documentation gap analysis
-- [ ] Auto‑linking docs across directories
+- JSON/YAML/MD output for hewd diff
+- Regression gating (--fail-on-score-drop=N)
+- Extended auto‑fix (README scaffolding, ADR templates)
+- Issue grouping by severity/category
+- HTML reports
+- Badges by category
+- Project health dashboard
+- Repo structure smell detection
+- Plugin system for custom rules
+
+---
 
 ## 📄 License
 
 To be determined.
 
+---
+
 ## 🔗 Project Links
 
-- **Source Code**: https://github.com/jbakchr/hewd
-- **Issues**: https://github.com/jbakchr/hewd/issues
-- **Releases**: https://github.com/jbakchr/hewd/releases
+- Source Code: https://github.com/jbakchr/hewd
+- Issues: https://github.com/jbakchr/hewd/issues
+- Releases: https://github.com/jbakchr/hewd/releases
