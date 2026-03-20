@@ -32,10 +32,36 @@ func newExportCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "export",
-		Short: "Export full machine-readable project health data (JSON)",
-		Long: `Export a stable, versioned JSON document describing project
-health, scoring, rule evaluations, and fixable issues. This format is designed
-for dashboards, CI analysis, regression tracking, and external tooling.`,
+		Short: "Export a complete machine-readable project health report.",
+		Long: `hewd export generates a complete, machine-readable JSON or YAML report
+describing the documentation, configuration, and structural health of the 
+current repository. The exported output uses hewd's stable MachineOutput schema, 
+which includes overall scores, category scores, rule results, fixable items, 
+metadata, timestamps, and version information.
+
+Exported reports are ideal for CI pipelines, dashboards, trend tracking, and 
+use as input for 'hewd diff'. The command uses the same diagnostic engine as 
+'hewd doctor' but omits human-focused formatting in favor of stable, 
+automation-friendly output structures.`,
+		Example: `
+  # Export project health to JSON
+  hewd export --output hewd.json
+
+  # Export in YAML format
+  hewd export --yaml --output hewd.yaml
+
+  # Pretty-print JSON to stdout
+  hewd export --json --pretty
+
+  # Use export to generate reports for diff comparison
+  hewd export --output old.json
+  # ... make changes ...
+  hewd export --output new.json
+  hewd diff old.json new.json
+
+  # Pipe export data to another command
+  hewd export --json | jq '.score'
+`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			if output == "" {
