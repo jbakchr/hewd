@@ -1,182 +1,213 @@
-# ✅ **Overall Plan for Polishing All CLI Help Text**
+# 🧭 **Final CLI Polish Pass — Development Plan**
 
-We will do this in 4 small, manageable phases:
+We break this into **6 phases**, each small enough to complete independently and in sequence.
 
----
-
-## **Phase 1 — Define a polished help‑text style guide**
-
-This gives us:
-
-- consistent tone
-- consistent formatting
-- consistent example style
-- rules for when to use Short vs Long descriptions
-- consistent command structure
-
-This prevents rewriting help text multiple times later.
+This gives us clarity, direction, and checkpoints.
 
 ---
 
-## **Phase 2 — Polish help text for each top‑level command**
+# **Phase 1 — Command Grouping (High Impact, Small Effort)**
 
-We do one command at a time, in this order:
+Grouping commands improves discoverability and makes `hewd --help` look professional.
 
-1.  `hewd scan`
-2.  `hewd doctor`
-3.  `hewd fix`
-4.  `hewd export`
-5.  `hewd badge`
-6.  `hewd diff`
-7.  `hewd init` (optional but recommended)
+## 🎯 Goals
 
-For each command I will generate:
+- Create logical command groups:
+  - **Analysis Commands:** scan, doctor, diff
+  - **Maintenance Commands:** fix, init
+  - **Reporting Commands:** export, badge
+- Update `root.go` to define these groups
+- Assign each subcommand to its group
 
-- `Short` description
-- `Long` description
-- Usage examples
-- Flag explanations
-- Consistent formatting
+## 🛠 Steps
 
-You copy/paste directly into your Cobra command files.
+1.  Add groups to `NewRootCmd` using `AddGroup(&cobra.Group{...})`
+2.  Add each command to the correct group via `cmd.GroupID = "analysis"` etc.
+3.  Verify help output (run `hewd --help`)
+4.  Refine wording of group titles if needed
 
----
+## 📌 Outcome
 
-## **Phase 3 — Polish the root help (`hewd --help`)**
-
-We’ll produce:
-
-- a polished banner
-- short command descriptions
-- example usage block
-- summary of what hewd does
-- link to docs
+Users get a **clean, structured**, and intuitive help output.
 
 ---
 
-## **Phase 4 — Optional UX Polish**
+# **Phase 2 — Global Flag Audit & Consistency Pass**
 
-- Add emojis to severity/help
-- Add "Examples:" section in every command
-- Add color to terminal output (if you want)
-- Consider adding command aliases
+We ensure consistency across commands for flags like:
 
----
+- `--json`
+- `--yaml`
+- `--md`
+- `--pretty`
+- `--debug`
+- `--no-color`
+- `--quiet` (optional future)
 
-# ⭐ Let's begin with **Phase 1: Define the Help‑Text Style Guide**
+## 🎯 Goals
 
-This is the foundation that ensures everything feels professional and cohesive.
+- Make flags consistent across all commands
+- Ensure all commands use the same descriptions
+- Validate conflict rules (e.g. JSON vs YAML vs Markdown)
+- Make sure every command follows the same flag ordering pattern
 
----
+## 🛠 Steps
 
-# 🔧 **Phase 1 — hewd Help Text Style Guide**
+1.  Review every command’s `Flags()` section
+2.  Identify inconsistent wording or missing flags
+3.  Align descriptions using a shared style
+4.  Implement consistent conflict logic (already mostly done)
+5.  Document naming rules in `CONTRIBUTING.md`
 
-Here is the exact style we’ll follow (you can approve or adjust anything):
+## 📌 Outcome
 
----
-
-## **1. Short Descriptions (one-line)**
-
-- Always written in **imperative tone**
-- Should answer: “What does this command do?”
-- Avoid details — keep it simple and fast to read
-
-**Examples:**
-
-- “Scan the repository and detect documentation, config, and structure indicators.”
-- “Run full project diagnostics and compute health scores.”
-
----
-
-## **2. Long Descriptions**
-
-- Multi-line
-- Paragraph-based
-- Contains:
-  - What the command does
-  - Why it’s useful
-  - What it outputs
-  - Common scenarios
-
-**Tone:**  
-Clear, confident, friendly, but professional.  
-No rambling — 4–8 sentences max.
+Commands feel consistent and “designed”, not accidental.
 
 ---
 
-## **3. Examples Section**
+# **Phase 3 — Command Help Structure Validation**
 
-Every command should have **3–5 examples** formatted like:
+Each command’s helptext should feel:
 
-```bash
-hewd command [flags]
-```
+✔ parallel in structure  
+✔ equal in tone  
+✔ equal in length  
+✔ clear  
+✔ legible
 
-Examples should be short, real, and directly useful.
+## 🎯 Goals
 
----
+- Ensure all helptext files in `internal/helptext` have consistent formatting
+- Check for broken indentation
+- Ensure examples are realistic and helpful
+- Prevent editorial drift between commands
 
-## **4. Flags Section**
+## 🛠 Steps
 
-Flags should:
+1.  Review each helptext file side-by-side
+2.  Normalize structure:
+    - 2–3 paragraphs max
+    - Description → capabilities → purpose
+    - Bullet lists use same format
+3.  Normalize examples:
+    - Same style, spacing, indentation
+4.  Remove unnecessary or overly verbose lines
+5.  Make sure no HTML escapes remain
 
-- Always be documented
-- Use consistent formatting
-- Group related flags together
-- Follow this style:
+## 📌 Outcome
 
-<!---->
-
-      --json        Output JSON format
-      --yaml        Output YAML format
-      --pretty      Pretty human-friendly output
-
----
-
-## **5. Markdown-like formatting encouraged in Long text**
-
-We use:
-
-- backticks for commands
-- minimal emoji (optional)
-- short sections for readability
-
-Example:
-
-    `hewd scan` is a fast repository scanner...
+The help system feels unified and professional.
 
 ---
 
-## **6. Avoid:**
+# **Phase 4 — Pretty Output Polishing (Optional but High Value)**
 
-- Overly long explanations
-- Academic tone
-- Excessive emojis
-- Repeating info from README
-- Multi-paragraph essays
-- Huge sections of output inside help text
+This involves improving:
+
+- alignment
+- spacing
+- indentation
+- severity icons
+- section headers
+- horizontal separators
+
+This affects:
+
+- `scan_pretty.go`
+- `doctor_pretty.go`
+- `diff_pretty.go`
+
+## 🎯 Goals
+
+- Improve whitespace and readability
+- Add consistent color usage (if coloring is desired)
+- Standardize headers like `===== OVERALL SCORE =====`
+- Review severity indicators (info/warn/error)
+
+## 🛠 Steps
+
+1.  Decide on a unified format
+2.  Apply the description to each file
+3.  Ensure consistency across commands
+4.  Validate on repos of varying sizes
+
+## 📌 Outcome
+
+hewd feels more polished, more readable, and more modern.
 
 ---
 
-## **7. Target user:**
+# **Phase 5 — Error Message Standardization**
 
-- Developers
-- Maintainers
-- CI users
-- Open‑source contributors
+Error messages should be:
 
-The help text should help them run the command _immediately_.
+- short
+- precise
+- actionable
+- consistent
+- non-technical (for user-facing errors)
+
+## 🎯 Goals
+
+- Ensure all errors follow similar phrasing
+- Improve messages for:
+  - missing flags
+  - invalid flag combinations
+  - missing files
+  - invalid config
+  - schema mismatch
+- Add context where needed (e.g. include filenames)
+
+## 🛠 Steps
+
+1.  Search the codebase for `fmt.Errorf`
+2.  Extract all error strings
+3.  Normalize style (e.g. always lowercase, no trailing period)
+4.  Improve clarity where needed
+
+## 📌 Outcome
+
+Clear, predictable, and helpful error messages.
 
 ---
 
-# 🎉 **Phase 1 is now complete.**
+# **Phase 6 — Optional: Custom Help Template (Advanced Polish)**
 
-If you're happy with this style guide, we can proceed to:
+This is optional but provides a **huge visual bump**.
 
-# 👉 **Phase 2, Step 1: Polish `hewd scan` help text**
+Cobra allows custom templates for:
 
-Just say:
+- command summaries
+- flag listings
+- examples
+- group sections
+- usage formatting
 
-> **“Polish help text for hewd scan”**
+## 🎯 Goals
 
-And we'll rewrite the Short, Long, Examples, and Flags for that command.
+- Create a template that matches hewd’s brand & tone
+- Replace the default Cobra help template
+- Make `--help` a joy to read
+
+## 🛠 Steps
+
+1.  Design a template in a separate file (e.g. `help_template.go`)
+2.  Use `cobra.AddTemplateFunc` + `cmd.SetUsageTemplate`
+3.  Test across commands
+
+## 📌 Outcome
+
+hewd feels like a fully polished product.
+
+---
+
+# 🧩 Summary of the Final CLI Polish Plan
+
+| Phase | Description                     | Goal                              |
+| ----- | ------------------------------- | --------------------------------- |
+| **1** | Command grouping                | Better structure in `hewd --help` |
+| **2** | Global flag consistency         | Predictable UX                    |
+| **3** | Helptext polish                 | Clean, unified documentation      |
+| **4** | Pretty output improvements      | High-quality terminal UX          |
+| **5** | Error message polish            | Clear, actionable errors          |
+| **6** | Custom help template (optional) | Professional CLI experience       |
