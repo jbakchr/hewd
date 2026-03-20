@@ -20,6 +20,7 @@ func newDiffCmd() *cobra.Command {
 
 			jsonFlag, _ := cmd.Flags().GetBool("json")
 			yamlFlag, _ := cmd.Flags().GetBool("yaml")
+			mdFlag, _ := cmd.Flags().GetBool("md")
 
 			oldPath := args[0]
 			newPath := args[1]
@@ -66,6 +67,11 @@ func newDiffCmd() *cobra.Command {
 			if yamlFlag {
 				return diff.WriteYAML(out)
 			}
+			if mdFlag {
+				md := diff.WriteMarkdown(result, oldReport, newReport)
+				fmt.Println(md)
+				return nil
+			}
 
 			// ------------------------------------------------------------
 			// DEFAULT PRETTY TERMINAL OUTPUT
@@ -78,6 +84,7 @@ func newDiffCmd() *cobra.Command {
 	flags := cmd.Flags()
 	flags.Bool("json", false, "Output diff result in JSON format")
 	flags.Bool("yaml", false, "Output diff result in YAML format")
+	flags.Bool("md", false, "Output diff result in Markdown format")
 
 	return cmd
 }
