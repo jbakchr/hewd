@@ -23,19 +23,23 @@ func newDoctorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "doctor",
 		Short: "Run full diagnostics and compute documentation, config, and structure scores.",
-		Long: `hewd doctor runs the full diagnostic engine on the current repository.
-It evaluates documentation, configuration, and structure using a curated set
-of rules, each with its own severity level (info, warn, error). The doctor
-command produces category scores, an overall health score, and detailed issue
-reports that describe missing files, incomplete documentation, missing CI
-workflows, and other structural problems.
+		Long: `hewd doctor runs the full diagnostic engine on the current repository. It
+evaluates documentation, configuration, and structure using a curated set of
+rules, each with a severity level (info, warn, error).
 
-The output can be formatted as pretty terminal text, JSON, YAML, or Markdown.
+The doctor command produces:
+
+  • Category scores (documentation, config, structure)
+  • An overall project health score
+  • Detailed issue reports with severity metadata
+  • A list of fixable problems
+  • Optional Markdown, JSON, or YAML output
+
 Markdown output is ideal for pull request comments, while JSON and YAML are
-well-suited for CI pipelines and automated quality gates.
+well‑suited for CI pipelines and automated quality gates.
 
-Use 'hewd doctor' regularly to verify project health, enforce documentation
-standards, and maintain consistent quality across repositories.`,
+Use 'hewd doctor' regularly to enforce documentation standards, detect
+regressions, and maintain consistent quality across repositories.`,
 		Example: `
   # Run full diagnostics using pretty output (default)
   hewd doctor
@@ -60,44 +64,66 @@ standards, and maintain consistent quality across repositories.`,
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
+			// ----- Directory -----
 			cwd, err := os.Getwd()
 			if err != nil {
-				return err
+				return fmt.Errorf("could not get working directory: %w", err)
 			}
 
+			// Config (optional)
 			cfg, _ := config.Load(cwd)
 
+			// Repo summary
 			summary, err := scan.ScanDirectory(cwd)
 			if err != nil {
 				return err
 			}
 
-			// Flags
+			// ----- Flags -----
 			onlyCats, _ := cmd.Flags().GetStringSlice("only")
 			exceptCats, _ := cmd.Flags().GetStringSlice("except")
+
 			jsonOut, _ := cmd.Flags().GetBool("json")
 			yamlOut, _ := cmd.Flags().GetBool("yaml")
+			markdownOut, _ := cmd.Flags().GetBool("md")
 			prettyJSON, _ := cmd.Flags().GetBool("pretty")
-			failOnStr, _ := cmd.Flags().GetString("fail-on")
+
 			showScore, _ := cmd.Flags().GetBool("score")
 			showCategoryScore, _ := cmd.Flags().GetBool("category-score")
-			markdownOut, _ := cmd.Flags().GetBool("md")
 
-			if jsonOut && yamlOut {
-				return fmt.Errorf("cannot use --json and --yaml together")
+			failOnStr, _ := cmd.Flags().GetString("fail-on")
+
+			// ----- Flag Conflicts -----
+			if (jsonOut && yamlOut) ||
+				(jsonOut && markdownOut) ||
+				(yamlOut && markdownOut) {
+				return fmt.Errorf("cannot combine --json, --yaml, or --md")
 			}
 
-			// Run rules
+			if yamlOut && prettyJSON {
+				return fmt.Errorf("cannot combine --yaml and --pretty (pretty applies only to JSON)")
+			}
+
+			if markdownOut && prettyJSON {
+				return fmt.Errorf("cannot combine --md and --pretty (pretty applies only to JSON)")
+			}
+
+			// These flags only apply to pretty output
+			if (showScore || showCategoryScore) &&
+				(jsonOut || yamlOut || markdownOut) {
+				return fmt.Errorf("--score and --category-score can only be used with pretty terminal output")
+			}
+
+			// ----- Run Rules -----
 			results := rules.RunAll(summary, cfg, onlyCats, exceptCats)
 
-			// Wrap rule results as ScoredRule
+			// Score wrapping
 			scoredRules := score.NewScoredRules(results)
 
-			// Compute scores
 			categoryScores := score.ScoreByCategory(scoredRules, cfg)
 			overallScore := score.Score(results, cfg)
 
-			// Detect fixable items
+			// Fixable detection
 			rawFixes := fix.DetectFixes(results, cwd)
 			var fixables []api.FixableItem
 			for _, f := range rawFixes {
@@ -108,7 +134,7 @@ standards, and maintain consistent quality across repositories.`,
 				})
 			}
 
-			// Machine-readable output object
+			// Machine-readable object
 			machine := api.MachineOutput{
 				SchemaVersion:  1,
 				HewdVersion:    version.Version,
@@ -119,14 +145,14 @@ standards, and maintain consistent quality across repositories.`,
 				Fixable:        fixables,
 			}
 
-			// ----- Markdown output -----
+			// ----- Markdown -----
 			if markdownOut {
 				md := renderMarkdown(machine)
 				fmt.Println(md)
 				return evaluateDoctorExitCode(results, failOnStr)
 			}
 
-			// ----- JSON output -----
+			// ----- JSON -----
 			if jsonOut {
 				var data []byte
 				if prettyJSON {
@@ -138,14 +164,14 @@ standards, and maintain consistent quality across repositories.`,
 				return evaluateDoctorExitCode(results, failOnStr)
 			}
 
-			// ----- YAML output -----
+			// ----- YAML -----
 			if yamlOut {
 				data, _ := yaml.Marshal(machine)
 				fmt.Println(string(data))
 				return evaluateDoctorExitCode(results, failOnStr)
 			}
 
-			// ----- Pretty Output (terminal) -----
+			// ----- Pretty Terminal Output -----
 			if showScore {
 				fmt.Printf("Overall Score: %d/100\n", overallScore)
 			}
@@ -163,16 +189,18 @@ standards, and maintain consistent quality across repositories.`,
 		},
 	}
 
-	// Flags
+	// ----- Flags -----
 	cmd.Flags().StringSlice("only", []string{}, "Only run rules from specific categories (comma-separated)")
 	cmd.Flags().StringSlice("except", []string{}, "Skip rules from specific categories (comma-separated)")
-	cmd.Flags().Bool("json", false, "Output the diagnostic report in JSON format")
-	cmd.Flags().Bool("yaml", false, "Output the diagnostic report in YAML format")
-	cmd.Flags().Bool("pretty", false, "Pretty-print JSON")
+
+	cmd.Flags().Bool("json", false, "Output the diagnostic report in JSON format. Use --pretty for indented JSON.")
+	cmd.Flags().Bool("yaml", false, "Output the diagnostic report in YAML format.")
+	cmd.Flags().Bool("md", false, "Output the diagnostic report in Markdown format.")
+	cmd.Flags().Bool("pretty", false, "Pretty-print JSON output.")
+
 	cmd.Flags().String("fail-on", "error", "Fail if a rule of this severity or higher occurs (info|warn|error)")
-	cmd.Flags().Bool("score", false, "Print only the overall score (CI-friendly)")
-	cmd.Flags().Bool("category-score", false, "Print only category scores (documentation/config/structure)")
-	cmd.Flags().Bool("md", false, "Output the diagnostic report in Markdown format")
+	cmd.Flags().Bool("score", false, "Print only the overall score (terminal output only)")
+	cmd.Flags().Bool("category-score", false, "Print only category scores (terminal output only)")
 
 	return cmd
 }
@@ -187,7 +215,7 @@ func renderMarkdown(m api.MachineOutput) string {
 	fmt.Fprintf(&b, "# hewd Report\n\n")
 
 	fmt.Fprintf(&b, "Generated by **hewd v%s** on %s\n\n",
-		m.HewdVersion, m.GeneratedAt.Format(time.RFC3339))
+		m.HewdVersion, m.GeneratedAt.Format("2006-01-02 15:04:05 MST"))
 
 	// Scores
 	fmt.Fprintf(&b, "## Scores\n")
@@ -237,7 +265,7 @@ func renderMarkdown(m api.MachineOutput) string {
 }
 
 //
-// CI exit code logic
+// CI Exit Code Logic
 //
 
 func evaluateDoctorExitCode(results []rules.Result, failOn string) error {
