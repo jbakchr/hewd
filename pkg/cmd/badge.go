@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -22,18 +23,17 @@ func newBadgeCmd() *cobra.Command {
 		Long: `hewd badge generates a standalone SVG badge representing the project's
 overall health score as calculated by 'hewd doctor'. The badge is similar in
 style to common README badges and can be embedded directly into Markdown or
-documentation. Colors are automatically chosen based on the score to indicate
-project health at a glance.
+documentation. Colors are automatically chosen based on the score to provide a
+quick visual indication of repository health.
 
-Badge generation does not require any external services; everything is rendered
-locally and written to a file. This is ideal for adding a project health badge
-to your README, publishing badges in CI pipelines, or generating artifacts for
-dashboards.`,
+Badge generation is fully local—no external services are required. This makes
+it ideal for README badges, CI pipelines, or publishing artifacts in dashboards.
+The SVG can be written to any path (e.g., docs/badge.svg or .github/badges/).`,
 		Example: `
   # Generate an SVG badge for the current project
   hewd badge --output badge.svg
 
-  # Write the badge to a docs folder
+  # Write the badge into a documentation folder
   hewd badge --output docs/health-badge.svg
 
   # Regenerate the badge after running diagnostics
@@ -46,27 +46,53 @@ dashboards.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			if output == "" {
-				return fmt.Errorf("--output is required")
+				return fmt.Errorf("--output is required (example: --output badge.svg)")
 			}
 
-			cwd, _ := os.Getwd()
+			// Ensure output directory exists
+			outDir := filepath.Dir(output)
+			if outDir != "." && outDir != "" {
+				if err := os.MkdirAll(outDir, 0755); err != nil {
+					return fmt.Errorf("failed to create output directory %s: %w", outDir, err)
+				}
+			}
+
+			// Determine working directory
+			cwd, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("could not determine working directory: %w", err)
+			}
+
+			// Load config (optional)
 			cfg, _ := config.Load(cwd)
 
+			// Scan repository
 			summary, err := scan.ScanDirectory(cwd)
 			if err != nil {
 				return err
 			}
 
+			// Run full rule engine
 			results := rules.RunAll(summary, cfg, nil, nil)
+
+			// Compute score
 			scored := score.Score(results, cfg)
 
+			// Generate badge SVG
 			svg := badge.Generate(scored)
 
-			return os.WriteFile(output, []byte(svg), 0644)
+			// Write file
+			if err := os.WriteFile(output, []byte(svg), 0644); err != nil {
+				return fmt.Errorf("failed to write badge to %s: %w", output, err)
+			}
+
+			fmt.Printf("Badge generated → %s\n", output)
+			return nil
 		},
 	}
 
-	cmd.Flags().StringVar(&output, "output", "", "Output path for the generated SVG badge (e.g., badge.svg)")
+	// Flags
+	cmd.Flags().StringVar(&output, "output", "", "Output path for the generated SVG badge (required)")
 
 	return cmd
 }
