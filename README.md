@@ -68,6 +68,83 @@ Pretty, JSON, YAML, and Markdown output modes available.
 
 ---
 
+## 📊 Demo Output — What `hewd` Looks Like in Practice
+
+### 🔍 Example: Running `hewd doctor`
+
+```bash
+===== OVERALL SCORE =====
+  82 / 100
+
+===== CATEGORY SCORES =====
+  Documentation:   70
+  Config:          90
+  Structure:       85
+
+===== DOCUMENTATION ISSUES =====
+  - DOC_LICENSE_MISSING (warn): LICENSE file is missing.
+  - DOC_CONTRIBUTING_MISSING (info): CONTRIBUTING.md not found.
+
+===== CONFIG ISSUES =====
+  (none)
+
+===== STRUCTURE ISSUES =====
+  - STR_DOCS_DIR_MISSING (warn): docs/ directory not found.
+```
+
+---
+
+### 🔁 Example: Running hewd diff old.json new.json
+
+```bash
+===== OVERALL SCORE =====
+Old: 78
+New: 87
+Change: +9 ↑
+
+===== CATEGORY SCORES =====
+Documentation:   65 → 75   (+10)
+Config:          80 → 84   (+4)
+Structure:       90 → 92   (+2)
+
+===== NEW ISSUES =====
+(none)
+
+===== RESOLVED ISSUES =====
+documentation
+  - DOC_LICENSE_MISSING (warn)
+  - DOC_README_STALE (info)
+```
+
+---
+
+### 🤖 Example: GitHub PR Comment (Markdown)
+
+```bash
+# 📊 Hewd Diff Report
+
+## 📈 Score Summary
+
+| Metric         | Old  | New  | Δ     | Trend |
+|----------------|------|------|-------|-------|
+| Overall Score  |   78 |   87 |   +9  | 🟩⬆️   |
+| Documentation  |   65 |   75 |  +10  | 🟩⬆️   |
+| Config         |   80 |   84 |   +4  | 🟩⬆️   |
+| Structure      |   90 |   92 |   +2  | 🟩⬆️   |
+
+---
+
+## 🆕 New Issues
+_No new issues! 🎉_
+
+## ✅ Resolved Issues
+### documentation
+- **DOC_LICENSE_MISSING** (warn)
+- **DOC_README_STALE** (info)
+```
+
+---
+
 ## 🔁 Example: Markdown Diff Output
 
 ```bash
