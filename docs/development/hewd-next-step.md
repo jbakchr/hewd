@@ -1,182 +1,182 @@
-**Prompt [Thanks. I&#039;ve added all the suggested files in the... | Try in Copilot Chat](https://m365.cloud.microsoft/chat/entity1-d870f6cd-4aa5-4d42-9626-ab690c041429/eyJpZCI6IlZYTmxjbFl4ZkdoMGRIQnpPaTh2YzNWaWMzUnlZWFJsTFdsdWRDNXZabVpwWTJVdVkyOXRMM3hQU1VRNk5UVTVZVEV5WWprdE9EUTVNaTAwWW1Wa0xUazJOR0V0TW1ZME1HTXlNekF4Wm1JMWZHWTVNVFV5WlRGaUxXWTNZelF0TkRoaFlTMDVNREV6TFdVd04yUmxNR1V3TkRWbE9Yd3lNREkyTFRBekxUSXdWREUxT2pNd09qRTNMall4TmpNMk9ETmEiLCJzY2VuYXJpbyI6InNoYXJlTGlua1ZpYVJpY2hDb3B5IiwicHJvcGVydGllcyI6eyJwcm9tcHRTb3VyY2UiOiJ1c2VyIiwiY2xpY2tUaW1lc3RhbXAiOiIyMDI2LTAzLTIwVDE1OjMwOjE3LjY0MloifSwiY2hhdFR5cGUiOiJ3ZWIiLCJ2ZXJzaW9uIjoxLjF9)**
-Thanks. I've added all the suggested files in the "docs/" folder. Right now I'm a bit unsure what would be the next best thing to do. Can you help suggest me that?
-**Response**
-Absolutely — and this is a **very healthy place** to pause and reassess your next steps.  
-You’ve just completed a _massive_ amount of high‑quality work:
+# ✅ **Overall Plan for Polishing All CLI Help Text**
 
-- diff engine
-- regression gating
-- GitHub Action
-- PR comment updating
-- Markdown renderer
-- `/docs/` documentation suite
-- a refined README
-- CLI architecture improvements
-- output polishing
-
-You now have a **professional‑grade CLI tool** with a solid documentation structure.  
-At this point, the best next step is _not more features_, but something much lighter:
+We will do this in 4 small, manageable phases:
 
 ---
 
-# ⭐ **Recommended Next Step: Do a “Polish + Consistency Pass” Before Adding Anything New**
+## **Phase 1 — Define a polished help‑text style guide**
 
-When a project reaches this stage, the best move is to ensure your tool looks, feels, and behaves consistently.  
-This ensures anyone who stumbles upon _hewd_ sees it as **coherent, intentional, and mature**.
+This gives us:
 
-This is common practice in successful open‑source tools.
+- consistent tone
+- consistent formatting
+- consistent example style
+- rules for when to use Short vs Long descriptions
+- consistent command structure
 
-Here are the top 3 highest‑value options for what to do next — none heavy, all very impactful.
-
----
-
-# 🟦 **1. Polish ALL CLI help text (`--help`)**
-
-(_Highest impact, lowest effort_)
-
-Your commands now include:
-
-- scan
-- doctor
-- fix
-- badge
-- export
-- diff
-
-**But their `--help` text likely still uses defaults from Cobra**, which is:
-
-- inconsistent
-- too verbose in some places
-- too short in others
-- missing examples
-- missing alignment
-- lacking “polish”
-
-✨ What we can do:
-
-- Rewrite all command descriptions
-- Add examples to each help message
-- Add usage blocks
-- Add short descriptions + detailed sections
-- Make help output beautiful
-
-Good help text makes your tool feel **professional** and increases adoption dramatically.
-
-I can generate beautifully written `Short:` and `Long:` descriptions for every command.
+This prevents rewriting help text multiple times later.
 
 ---
 
-# 🟩 **2. Polish the PR comment layout (especially diff output)**
+## **Phase 2 — Polish help text for each top‑level command**
 
-(_Medium effort, high visible impact_)
+We do one command at a time, in this order:
 
-Your PR diff integrated with GitHub Actions already works — and that’s huge.
+1.  `hewd scan`
+2.  `hewd doctor`
+3.  `hewd fix`
+4.  `hewd export`
+5.  `hewd badge`
+6.  `hewd diff`
+7.  `hewd init` (optional but recommended)
 
-Now we can make it:
+For each command I will generate:
 
-- cleaner
-- easier to read
-- more compact
-- more “GitHub-native”
+- `Short` description
+- `Long` description
+- Usage examples
+- Flag explanations
+- Consistent formatting
 
-Polish ideas:
+You copy/paste directly into your Cobra command files.
 
-### ✔ Add collapsible `<details>` sections
+---
 
-Example:
+## **Phase 3 — Polish the root help (`hewd --help`)**
 
-```md
-<details>
-<summary>Resolved Issues (3)</summary>
+We’ll produce:
 
-- ...
-- ...
-- ...
+- a polished banner
+- short command descriptions
+- example usage block
+- summary of what hewd does
+- link to docs
 
-</details>
+---
+
+## **Phase 4 — Optional UX Polish**
+
+- Add emojis to severity/help
+- Add "Examples:" section in every command
+- Add color to terminal output (if you want)
+- Consider adding command aliases
+
+---
+
+# ⭐ Let's begin with **Phase 1: Define the Help‑Text Style Guide**
+
+This is the foundation that ensures everything feels professional and cohesive.
+
+---
+
+# 🔧 **Phase 1 — hewd Help Text Style Guide**
+
+Here is the exact style we’ll follow (you can approve or adjust anything):
+
+---
+
+## **1. Short Descriptions (one-line)**
+
+- Always written in **imperative tone**
+- Should answer: “What does this command do?”
+- Avoid details — keep it simple and fast to read
+
+**Examples:**
+
+- “Scan the repository and detect documentation, config, and structure indicators.”
+- “Run full project diagnostics and compute health scores.”
+
+---
+
+## **2. Long Descriptions**
+
+- Multi-line
+- Paragraph-based
+- Contains:
+  - What the command does
+  - Why it’s useful
+  - What it outputs
+  - Common scenarios
+
+**Tone:**  
+Clear, confident, friendly, but professional.  
+No rambling — 4–8 sentences max.
+
+---
+
+## **3. Examples Section**
+
+Every command should have **3–5 examples** formatted like:
+
+```bash
+hewd command [flags]
 ```
 
-### ✔ Add a bold summary at top
+Examples should be short, real, and directly useful.
+
+---
+
+## **4. Flags Section**
+
+Flags should:
+
+- Always be documented
+- Use consistent formatting
+- Group related flags together
+- Follow this style:
+
+<!---->
+
+      --json        Output JSON format
+      --yaml        Output YAML format
+      --pretty      Pretty human-friendly output
+
+---
+
+## **5. Markdown-like formatting encouraged in Long text**
+
+We use:
+
+- backticks for commands
+- minimal emoji (optional)
+- short sections for readability
 
 Example:
 
-    **Summary:** +9 score increase, 0 new issues, 2 resolved 🎉
-
-### ✔ Add severity emojis (`🔥`, `⚠️`, `ℹ️`) in issue lists
-
-### ✔ Make category headers smaller (`###`)
-
-### ✔ Add green/red score border indicators
-
-This improves first impressions dramatically.
+    `hewd scan` is a fast repository scanner...
 
 ---
 
-# 🟧 **3. Create an example repository (`example/`)**
+## **6. Avoid:**
 
-(_Medium effort, medium benefit; great for demos and docs_)
-
-A tiny demo repo could live in:
-
-    example/
-
-Containing:
-
-- a tiny project (README, go.mod, docs/)
-- before/after reports
-- a sample PR
-- screenshot of diff output
-
-People learn _instantly_ by example.
-
-This is optional but very valuable.
+- Overly long explanations
+- Academic tone
+- Excessive emojis
+- Repeating info from README
+- Multi-paragraph essays
+- Huge sections of output inside help text
 
 ---
 
-# ⭐ What I recommend doing _right now_
+## **7. Target user:**
 
-Start with **Option 1: Polish CLI help text**.
+- Developers
+- Maintainers
+- CI users
+- Open‑source contributors
 
-Why?
-
-- It’s easy
-- Fun
-- Makes hewd feel finished
-- Helps real users
-- Helps future-you
-- Helps people who find the tool organically
-
-And unlike big features, it won’t drain you.
-
-We do it **command-by-command** so it’s totally manageable.
+The help text should help them run the command _immediately_.
 
 ---
 
-# 👉 So the next step I suggest:
+# 🎉 **Phase 1 is now complete.**
 
-**“Let’s polish the CLI help text.”**
+If you're happy with this style guide, we can proceed to:
 
-If that sounds good, just say:
+# 👉 **Phase 2, Step 1: Polish `hewd scan` help text**
 
-> **"Help me polish the CLI help text."**
+Just say:
 
-…and I’ll generate:
+> **“Polish help text for hewd scan”**
 
-- polished Short + Long descriptions
-- polished Usage blocks
-- examples
-- clean flag descriptions
-- consistent formatting for all commands
-
-Totally ready to copy & paste into your Cobra command definitions.
-
----
-
-If you prefer another next step from the list, just tell me:
-
-- “Let’s polish the PR diff comment formatting”
-- “Let’s create an example repo”
-- “Let’s refine the README links”
-- “Let’s do a pre‑release checklist”
-
-Whatever you choose, we’ll do it step‑by‑step, calmly and cleanly.
+And we'll rewrite the Short, Long, Examples, and Flags for that command.

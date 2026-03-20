@@ -34,3 +34,5 @@ go.work.sum
 # Ignore action source but keep dist
 .github/actions/hewd-action/node_modules/
 .github/actions/hewd-action/src/
+
+docs/development/hewd-next-step.md
