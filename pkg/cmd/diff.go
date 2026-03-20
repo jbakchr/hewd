@@ -18,6 +18,9 @@ func newDiffCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
+			jsonFlag, _ := cmd.Flags().GetBool("json")
+			yamlFlag, _ := cmd.Flags().GetBool("yaml")
+
 			oldPath := args[0]
 			newPath := args[1]
 
@@ -43,93 +46,38 @@ func newDiffCmd() *cobra.Command {
 				return fmt.Errorf("failed to parse new report JSON: %w", err)
 			}
 
-			// Validate schema version
 			if oldReport.SchemaVersion != newReport.SchemaVersion {
-				return fmt.Errorf(
-					"schema version mismatch: old=%d new=%d",
-					oldReport.SchemaVersion,
-					newReport.SchemaVersion,
-				)
+				return fmt.Errorf("schema version mismatch: old=%d new=%d",
+					oldReport.SchemaVersion, newReport.SchemaVersion)
 			}
 
-			// ------------------------------------------------------------
-			// PHASE 4: Compute diff + sorting + grouping
-			// ------------------------------------------------------------
+			// Compute full diff
 			result := diff.ComputeDiff(&oldReport, &newReport)
 
-			groupedNew := diff.GroupIssues(result.NewIssues)
-			groupedResolved := diff.GroupIssues(result.ResolvedIssues)
+			// Make machine-readable structure
+			out := diff.MakeDiffOutput(result, &oldReport, &newReport)
 
 			// ------------------------------------------------------------
-			// Output
+			// MACHINE READABLE OUTPUT (JSON / YAML)
 			// ------------------------------------------------------------
-			fmt.Println("\n===== OVERALL SCORE =====")
-			fmt.Println("----------------------------------------")
-			fmt.Printf("Old report score: %d\n", oldReport.Score)
-			fmt.Printf("New report score: %d\n", newReport.Score)
-			fmt.Printf("Score change: %+d\n", result.ScoreDelta)
-
-			fmt.Println("\n===== CATEGORY SCORES =====")
-			fmt.Println("----------------------------------------")
-
-			fmt.Printf("  %-14s %3d → %3d   (%+d)\n",
-				"Documentation:",
-				oldReport.CategoryScores.Documentation,
-				newReport.CategoryScores.Documentation,
-				result.CategoryDeltas["documentation"],
-			)
-
-			fmt.Printf("  %-14s %3d → %3d   (%+d)\n",
-				"Config:",
-				oldReport.CategoryScores.Config,
-				newReport.CategoryScores.Config,
-				result.CategoryDeltas["config"],
-			)
-
-			fmt.Printf("  %-14s %3d → %3d   (%+d)\n",
-				"Structure:",
-				oldReport.CategoryScores.Structure,
-				newReport.CategoryScores.Structure,
-				result.CategoryDeltas["structure"],
-			)
-
-			// ------------------------------------------------------------
-			// NEW ISSUES (sorted + grouped)
-			// ------------------------------------------------------------
-			fmt.Println("\n===== NEW ISSUES =====")
-			fmt.Println("----------------------------------------")
-
-			if len(result.NewIssues) == 0 {
-				fmt.Println("(none)")
-			} else {
-				for category, issues := range groupedNew {
-					fmt.Printf("\n# %s\n", category)
-					for _, issue := range issues {
-						fmt.Printf("  - %s (%s)\n", issue.ID, issue.Level)
-					}
-				}
+			if jsonFlag {
+				return diff.WriteJSON(out)
+			}
+			if yamlFlag {
+				return diff.WriteYAML(out)
 			}
 
 			// ------------------------------------------------------------
-			// RESOLVED ISSUES (sorted + grouped)
+			// DEFAULT PRETTY TERMINAL OUTPUT
 			// ------------------------------------------------------------
-			fmt.Println("\n===== RESOLVED ISSUES =====")
-			fmt.Println("----------------------------------------")
-
-			if len(result.ResolvedIssues) == 0 {
-				fmt.Println("(none)")
-			} else {
-				for category, issues := range groupedResolved {
-					fmt.Printf("\n# %s\n", category)
-					for _, issue := range issues {
-						fmt.Printf("  - %s (%s)\n", issue.ID, issue.Level)
-					}
-				}
-			}
-
-			return nil
+			return writePrettyDiff(result, oldReport, newReport)
 		},
 	}
+
+	// Add flags
+	flags := cmd.Flags()
+	flags.Bool("json", false, "Output diff result in JSON format")
+	flags.Bool("yaml", false, "Output diff result in YAML format")
 
 	return cmd
 }
