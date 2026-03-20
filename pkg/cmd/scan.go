@@ -16,16 +16,21 @@ func newScanCmd() *cobra.Command {
 		Use:   "scan",
 		Short: "Scan the repository and detect documentation, config, languages, and structure indicators.",
 		Long: `hewd scan performs a fast, lightweight analysis of the current repository.
-It detects documentation files, configuration files, programming languages, 
+It detects documentation files, configuration files, programming languages,
 project metadata, and structural indicators such as the presence of a docs/
 directory or CI workflows.
 
-This command is ideal for getting a high-level overview of a project's
-documentation and structure before running 'hewd doctor' or exporting a
-machine-readable health report.
+This command provides a high-level overview of your project's documentation
+and structure. It is often the first step before running 'hewd doctor' or
+exporting a machine-readable health report.
 
-Scan output can be printed in pretty, JSON, or YAML formats and is safe to run
-in local development or CI environments.`,
+Scan output supports multiple formats including:
+
+  • Pretty (human-readable)
+  • JSON
+  • YAML
+
+This command is safe to run in both local development and CI environments.`,
 		Example: `
   # Scan the current repository (pretty output)
   hewd scan --pretty
@@ -62,6 +67,10 @@ in local development or CI environments.`,
 				return fmt.Errorf("cannot combine --json and --yaml")
 			}
 
+			if yamlOut && pretty {
+				return fmt.Errorf("cannot combine --yaml and --pretty (pretty mode only applies to JSON)")
+			}
+
 			if jsonOut {
 				var data []byte
 				if pretty {
@@ -90,9 +99,9 @@ in local development or CI environments.`,
 		},
 	}
 
-	cmd.Flags().Bool("json", false, "Output full scan results in JSON format (useful for CI and automation)")
-	cmd.Flags().Bool("yaml", false, "Output results in YAML format")
-	cmd.Flags().Bool("pretty", false, "Show readable, color-friendly output ideal for local development")
+	cmd.Flags().BoolP("json", "j", false, "Output results in JSON format. Use --pretty for indented output.")
+	cmd.Flags().BoolP("yaml", "y", false, "Output results in YAML format.")
+	cmd.Flags().BoolP("pretty", "p", false, "Pretty output for human-readable CLI usage.")
 
 	return cmd
 }
