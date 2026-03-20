@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jbakchr/hewd/internal/api"
+	"github.com/jbakchr/hewd/internal/diff"
 )
 
 func newDiffCmd() *cobra.Command {
@@ -51,94 +52,79 @@ func newDiffCmd() *cobra.Command {
 				)
 			}
 
-			// Validate files exist (logic only, no diffing yet)
-			if _, err := os.Stat(oldPath); os.IsNotExist(err) {
-				return fmt.Errorf("old report not found: %s", oldPath)
-			}
-			if _, err := os.Stat(newPath); os.IsNotExist(err) {
-				return fmt.Errorf("new report not found: %s", newPath)
-			}
+			// ------------------------------------------------------------
+			// PHASE 4: Compute diff + sorting + grouping
+			// ------------------------------------------------------------
+			result := diff.ComputeDiff(&oldReport, &newReport)
 
+			groupedNew := diff.GroupIssues(result.NewIssues)
+			groupedResolved := diff.GroupIssues(result.ResolvedIssues)
+
+			// ------------------------------------------------------------
+			// Output
+			// ------------------------------------------------------------
 			fmt.Println("\n===== OVERALL SCORE =====")
 			fmt.Println("----------------------------------------")
 			fmt.Printf("Old report score: %d\n", oldReport.Score)
 			fmt.Printf("New report score: %d\n", newReport.Score)
-
-			// Score delta
-			delta := newReport.Score - oldReport.Score
-			fmt.Printf("Score change: %+d\n", delta)
+			fmt.Printf("Score change: %+d\n", result.ScoreDelta)
 
 			fmt.Println("\n===== CATEGORY SCORES =====")
 			fmt.Println("----------------------------------------")
-			// Category score deltas
-			docDelta := newReport.CategoryScores.Documentation - oldReport.CategoryScores.Documentation
-			cfgDelta := newReport.CategoryScores.Config - oldReport.CategoryScores.Config
-			structDelta := newReport.CategoryScores.Structure - oldReport.CategoryScores.Structure
 
 			fmt.Printf("  %-14s %3d → %3d   (%+d)\n",
 				"Documentation:",
 				oldReport.CategoryScores.Documentation,
 				newReport.CategoryScores.Documentation,
-				docDelta,
+				result.CategoryDeltas["documentation"],
 			)
 
 			fmt.Printf("  %-14s %3d → %3d   (%+d)\n",
 				"Config:",
 				oldReport.CategoryScores.Config,
 				newReport.CategoryScores.Config,
-				cfgDelta,
+				result.CategoryDeltas["config"],
 			)
 
 			fmt.Printf("  %-14s %3d → %3d   (%+d)\n",
 				"Structure:",
 				oldReport.CategoryScores.Structure,
 				newReport.CategoryScores.Structure,
-				structDelta,
+				result.CategoryDeltas["structure"],
 			)
 
-			// --------------------------------------------
-			// New issues (present in newReport but not oldReport)
-			// --------------------------------------------
-			// Build set of old issue IDs
-			oldIDs := make(map[string]bool)
-			for _, r := range oldReport.Results {
-				oldIDs[r.ID] = true
-			}
-
+			// ------------------------------------------------------------
+			// NEW ISSUES (sorted + grouped)
+			// ------------------------------------------------------------
 			fmt.Println("\n===== NEW ISSUES =====")
 			fmt.Println("----------------------------------------")
-			fmt.Println("New issues:")
-			foundNew := false
-			for _, r := range newReport.Results {
-				if !oldIDs[r.ID] {
-					fmt.Printf("  - %s (%s)\n", r.ID, r.Level)
-					foundNew = true
+
+			if len(result.NewIssues) == 0 {
+				fmt.Println("(none)")
+			} else {
+				for category, issues := range groupedNew {
+					fmt.Printf("\n# %s\n", category)
+					for _, issue := range issues {
+						fmt.Printf("  - %s (%s)\n", issue.ID, issue.Level)
+					}
 				}
 			}
-			if !foundNew {
-				fmt.Println("  (none)")
-			}
 
-			// --------------------------------------------
-			// Resolved issues (present in oldReport but not in newReport)
-			// --------------------------------------------
-			newIDs := make(map[string]bool)
-			for _, r := range newReport.Results {
-				newIDs[r.ID] = true
-			}
-
+			// ------------------------------------------------------------
+			// RESOLVED ISSUES (sorted + grouped)
+			// ------------------------------------------------------------
 			fmt.Println("\n===== RESOLVED ISSUES =====")
 			fmt.Println("----------------------------------------")
-			fmt.Println("Resolved issues:")
-			foundResolved := false
-			for _, r := range oldReport.Results {
-				if !newIDs[r.ID] {
-					fmt.Printf("  - %s (%s)\n", r.ID, r.Level)
-					foundResolved = true
+
+			if len(result.ResolvedIssues) == 0 {
+				fmt.Println("(none)")
+			} else {
+				for category, issues := range groupedResolved {
+					fmt.Printf("\n# %s\n", category)
+					for _, issue := range issues {
+						fmt.Printf("  - %s (%s)\n", issue.ID, issue.Level)
+					}
 				}
-			}
-			if !foundResolved {
-				fmt.Println("  (none)")
 			}
 
 			return nil
