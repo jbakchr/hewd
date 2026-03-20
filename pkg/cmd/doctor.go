@@ -13,6 +13,7 @@ import (
 	"github.com/jbakchr/hewd/internal/api"
 	"github.com/jbakchr/hewd/internal/config"
 	"github.com/jbakchr/hewd/internal/fix"
+	"github.com/jbakchr/hewd/internal/helptext"
 	"github.com/jbakchr/hewd/internal/rules"
 	"github.com/jbakchr/hewd/internal/scan"
 	"github.com/jbakchr/hewd/internal/score"
@@ -21,47 +22,10 @@ import (
 
 func newDoctorCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "doctor",
-		Short: "Run full diagnostics and compute documentation, config, and structure scores.",
-		Long: `hewd doctor runs the full diagnostic engine on the current repository. It
-evaluates documentation, configuration, and structure using a curated set of
-rules, each with a severity level (info, warn, error).
-
-The doctor command produces:
-
-  • Category scores (documentation, config, structure)
-  • An overall project health score
-  • Detailed issue reports with severity metadata
-  • A list of fixable problems
-  • Optional Markdown, JSON, or YAML output
-
-Markdown output is ideal for pull request comments, while JSON and YAML are
-well‑suited for CI pipelines and automated quality gates.
-
-Use 'hewd doctor' regularly to enforce documentation standards, detect
-regressions, and maintain consistent quality across repositories.`,
-		Example: `
-  # Run full diagnostics using pretty output (default)
-  hewd doctor
-
-  # Output Markdown report (ideal for PR comments)
-  hewd doctor --md > health.md
-
-  # Output JSON for CI pipelines or dashboards
-  hewd doctor --json > doctor.json
-
-  # Output YAML
-  hewd doctor --yaml
-
-  # Only evaluate documentation-related rules
-  hewd doctor --only documentation
-
-  # Exclude config-related checks
-  hewd doctor --except config
-
-  # Fail CI if any warning-level issues occur
-  hewd doctor --fail-on=warn
-`,
+		Use:     helptext.DoctorUse,
+		Short:   helptext.DoctorShort,
+		Long:    helptext.DoctorLong,
+		Example: helptext.DoctorExample,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// ----- Directory -----

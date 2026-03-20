@@ -8,45 +8,16 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
+	"github.com/jbakchr/hewd/internal/helptext"
 	"github.com/jbakchr/hewd/internal/scan"
 )
 
 func newScanCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "scan",
-		Short: "Scan the repository and detect documentation, config, languages, and structure indicators.",
-		Long: `hewd scan performs a fast, lightweight analysis of the current repository.
-It detects documentation files, configuration files, programming languages,
-project metadata, and structural indicators such as the presence of a docs/
-directory or CI workflows.
-
-This command provides a high-level overview of your project's documentation
-and structure. It is often the first step before running 'hewd doctor' or
-exporting a machine-readable health report.
-
-Scan output supports multiple formats including:
-
-  • Pretty (human-readable)
-  • JSON
-  • YAML
-
-This command is safe to run in both local development and CI environments.`,
-		Example: `
-  # Scan the current repository (pretty output)
-  hewd scan --pretty
-
-  # Scan and output JSON
-  hewd scan --json
-
-  # Scan and output YAML
-  hewd scan --yaml
-
-  # Save JSON output to a file
-  hewd scan --json > scan.json
-
-  # Use scan as part of a workflow before doctor
-  hewd scan --pretty && hewd doctor
-`,
+		Use:     helptext.ScanUse,
+		Short:   helptext.ScanShort,
+		Long:    helptext.ScanLong,
+		Example: helptext.ScanExample,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cwd, err := os.Getwd()

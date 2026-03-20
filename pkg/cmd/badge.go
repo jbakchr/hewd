@@ -9,6 +9,7 @@ import (
 
 	"github.com/jbakchr/hewd/internal/badge"
 	"github.com/jbakchr/hewd/internal/config"
+	"github.com/jbakchr/hewd/internal/helptext"
 	"github.com/jbakchr/hewd/internal/rules"
 	"github.com/jbakchr/hewd/internal/scan"
 	"github.com/jbakchr/hewd/internal/score"
@@ -18,31 +19,10 @@ func newBadgeCmd() *cobra.Command {
 	var output string
 
 	cmd := &cobra.Command{
-		Use:   "badge",
-		Short: "Generate an SVG badge displaying the project's overall health score.",
-		Long: `hewd badge generates a standalone SVG badge representing the project's
-overall health score as calculated by 'hewd doctor'. The badge is similar in
-style to common README badges and can be embedded directly into Markdown or
-documentation. Colors are automatically chosen based on the score to provide a
-quick visual indication of repository health.
-
-Badge generation is fully local—no external services are required. This makes
-it ideal for README badges, CI pipelines, or publishing artifacts in dashboards.
-The SVG can be written to any path (e.g., docs/badge.svg or .github/badges/).`,
-		Example: `
-  # Generate an SVG badge for the current project
-  hewd badge --output badge.svg
-
-  # Write the badge into a documentation folder
-  hewd badge --output docs/health-badge.svg
-
-  # Regenerate the badge after running diagnostics
-  hewd doctor --json > report.json
-  hewd badge --output badge.svg
-
-  # Use badge generation inside CI
-  hewd badge --output badge.svg
-`,
+		Use:     helptext.BadgeUse,
+		Short:   helptext.BadgeShort,
+		Long:    helptext.BadgeLong,
+		Example: helptext.BadgeExample,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			if output == "" {
