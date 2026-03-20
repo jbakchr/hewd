@@ -14,8 +14,42 @@ import (
 func newDiffCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "diff <old.json> <new.json>",
-		Short: "Compare two hewd JSON reports and show score/regression differences",
-		Args:  cobra.ExactArgs(2),
+		Short: "Compare two hewd JSON reports and show score, category, and issue differences.",
+		Long: `hewd diff compares two machine-readable hewd reports (JSON) and highlights how
+a project's health has changed over time. The diff engine computes overall score
+changes, category score deltas, new issues, resolved issues, and grouped/sorted
+issue summaries.
+
+Multiple output formats are supported, including pretty terminal output, JSON,
+YAML, and Markdown. Markdown output is ideal for GitHub pull request comments,
+while JSON/YAML are well-suited for CI pipelines and automated analysis.
+
+The diff command also supports regression gating, allowing CI pipelines to fail
+automatically if score decreases or new issues appear. This makes 'hewd diff' a
+powerful tool for enforcing documentation and structure quality in code reviews.`,
+		Example: `
+  # Compare two reports and print pretty diff output
+  hewd diff old.json new.json
+
+  # Output Markdown diff (ideal for GitHub PR comments)
+  hewd diff old.json new.json --md > diff.md
+
+  # Output JSON diff for CI pipelines
+  hewd diff old.json new.json --json > diff.json
+
+  # Output YAML diff
+  hewd diff old.json new.json --yaml
+
+  # Fail CI if the score drops by at least 5 points
+  hewd diff old.json new.json --fail-on-score-drop=5
+
+  # Fail CI if any new error-level issues appear
+  hewd diff old.json new.json --fail-on-new-errors
+
+  # Fail on any regression (recommended for PRs)
+  hewd diff old.json new.json --fail-on-any-regression
+`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			jsonFlag, _ := cmd.Flags().GetBool("json")
