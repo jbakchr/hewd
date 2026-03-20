@@ -16,17 +16,22 @@ func newDiffCmd() *cobra.Command {
 		Use:   "diff <old.json> <new.json>",
 		Short: "Compare two hewd JSON reports and show score, category, and issue differences.",
 		Long: `hewd diff compares two machine-readable hewd reports (JSON) and highlights how
-a project's health has changed over time. The diff engine computes overall score
-changes, category score deltas, new issues, resolved issues, and grouped/sorted
-issue summaries.
+a project's health has changed over time. The diff engine computes:
 
-Multiple output formats are supported, including pretty terminal output, JSON,
-YAML, and Markdown. Markdown output is ideal for GitHub pull request comments,
-while JSON/YAML are well-suited for CI pipelines and automated analysis.
+  • Score deltas
+  • Category score changes
+  • New issues
+  • Resolved issues
+  • Grouped and sorted issue summaries
 
-The diff command also supports regression gating, allowing CI pipelines to fail
-automatically if score decreases or new issues appear. This makes 'hewd diff' a
-powerful tool for enforcing documentation and structure quality in code reviews.`,
+Output formats include pretty terminal output, JSON, YAML, and Markdown. Markdown
+is ideal for GitHub pull request comments, while JSON/YAML are well-suited for
+CI pipelines and automated analysis workflows.
+
+The diff command also supports regression gating. CI pipelines can fail
+automatically if score decreases, new issues appear, or any regression is
+detected. This makes 'hewd diff' a powerful tool for maintaining documentation
+quality and repository structure during code review.`,
 		Example: `
   # Compare two reports and print pretty diff output
   hewd diff old.json new.json
@@ -52,6 +57,9 @@ powerful tool for enforcing documentation and structure quality in code reviews.
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
+			// --------------------------------------
+			// Flags
+			// --------------------------------------
 			jsonFlag, _ := cmd.Flags().GetBool("json")
 			yamlFlag, _ := cmd.Flags().GetBool("yaml")
 			mdFlag, _ := cmd.Flags().GetBool("md")
@@ -60,10 +68,19 @@ powerful tool for enforcing documentation and structure quality in code reviews.
 			failNewErrors, _ := cmd.Flags().GetBool("fail-on-new-errors")
 			failAny, _ := cmd.Flags().GetBool("fail-on-any-regression")
 
+			// Prevent invalid format combos
+			if (jsonFlag && yamlFlag) ||
+				(jsonFlag && mdFlag) ||
+				(yamlFlag && mdFlag) {
+				return fmt.Errorf("cannot combine --json, --yaml, or --md")
+			}
+
 			oldPath := args[0]
 			newPath := args[1]
 
-			// Load old.json
+			// --------------------------------------
+			// Load old report
+			// --------------------------------------
 			oldData, err := os.ReadFile(oldPath)
 			if err != nil {
 				return fmt.Errorf("failed to read old report: %w", err)
@@ -74,7 +91,9 @@ powerful tool for enforcing documentation and structure quality in code reviews.
 				return fmt.Errorf("failed to parse old report JSON: %w", err)
 			}
 
-			// Load new.json
+			// --------------------------------------
+			// Load new report
+			// --------------------------------------
 			newData, err := os.ReadFile(newPath)
 			if err != nil {
 				return fmt.Errorf("failed to read new report: %w", err)
@@ -85,35 +104,38 @@ powerful tool for enforcing documentation and structure quality in code reviews.
 				return fmt.Errorf("failed to parse new report JSON: %w", err)
 			}
 
+			// Schema version check
 			if oldReport.SchemaVersion != newReport.SchemaVersion {
-				return fmt.Errorf("schema version mismatch: old=%d new=%d",
-					oldReport.SchemaVersion, newReport.SchemaVersion)
+				return fmt.Errorf(
+					"schema version mismatch: old=%d new=%d",
+					oldReport.SchemaVersion, newReport.SchemaVersion,
+				)
 			}
 
-			// Compute full diff
+			// --------------------------------------
+			// Compute diff
+			// --------------------------------------
 			result := diff.ComputeDiff(&oldReport, &newReport)
 
+			// Regression gating
 			gate := diff.EvaluateRegressionGates(result, failScoreDrop, failNewErrors, failAny)
 
 			if gate.Failed {
-				// Optional: print reasons unless in JSON/YAML mode
 				if !jsonFlag && !yamlFlag {
 					fmt.Println("\n❌ Regression detected:")
 					for _, r := range gate.Reasons {
 						fmt.Printf(" - %s\n", r)
 					}
 				}
-
-				// Exit code 1 means "regression failure"
 				return fmt.Errorf("regression gating failed")
 			}
 
-			// Make machine-readable structure
+			// Machine-readable diff structure
 			out := diff.MakeDiffOutput(result, &oldReport, &newReport)
 
-			// ------------------------------------------------------------
-			// MACHINE READABLE OUTPUT (JSON / YAML)
-			// ------------------------------------------------------------
+			// --------------------------------------
+			// JSON / YAML / Markdown outputs
+			// --------------------------------------
 			if jsonFlag {
 				return diff.WriteJSON(out)
 			}
@@ -126,14 +148,16 @@ powerful tool for enforcing documentation and structure quality in code reviews.
 				return nil
 			}
 
-			// ------------------------------------------------------------
-			// DEFAULT PRETTY TERMINAL OUTPUT
-			// ------------------------------------------------------------
+			// --------------------------------------
+			// DEFAULT: Pretty terminal diff
+			// --------------------------------------
 			return writePrettyDiff(result, oldReport, newReport)
 		},
 	}
 
-	// Add flags
+	// --------------------------------------
+	// Flags
+	// --------------------------------------
 	flags := cmd.Flags()
 	flags.Bool("json", false, "Output diff result in JSON format")
 	flags.Bool("yaml", false, "Output diff result in YAML format")
