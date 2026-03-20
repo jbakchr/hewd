@@ -1,27 +1,26 @@
-# 🗺️ `hewd` Roadmap
+# 🗺️ **hewd Roadmap**
 
-This document outlines the short‑term, mid‑term, and long‑term roadmap for **`hewd`**, based on the current capabilities of the tool and the natural direction that will strengthen its usefulness and maturity over time.
+_A clear, structured roadmap for the future evolution of the hewd project._
 
-`hewd` already includes:
+hewd already includes:
 
-- project scanning
-- diagnostics (doctor)
-- scoring engine
-- auto-fix system
+- Project scanning
+- Diagnostics (`hewd doctor`)
+- Scoring engine
+- Auto-fix system
 - JSON/YAML/Markdown output
-- diff engine
-- regression gating
-- GitHub Action integration
-- PR comment updating
-- badge generation
+- Diff engine (new/resolved issues, score deltas, category deltas)
+- Regression gating
+- GitHub Action with PR comment updating
+- Badge generation
 
-The roadmap below builds on this foundation.
+hewd is now **fully functional** and ready for polishing, documentation, and its first public release.
 
 ---
 
-## ⭐ Phase 0 — Completed Milestones
+# ⭐ Phase 0 — Completed Milestones
 
-These major foundational tasks are already complete:
+(_These foundational pieces are done and stable._)
 
 ### ✔ Core Features
 
@@ -36,7 +35,7 @@ These major foundational tasks are already complete:
 
 - Score delta detection
 - Category delta detection
-- New/resolved issue detection
+- New/resolved issues
 - Sorting + grouping
 - JSON diff output
 - YAML diff output
@@ -51,206 +50,226 @@ These major foundational tasks are already complete:
 - Strict exit-code behavior
 - Diff-mode CI workflows
 
-`hewd` is now stable and usable by teams.
+hewd is now stable and usable by teams.
 
 ---
 
-## 🌱 Phase 1 — Pre‑Release Polish (Current Phase)
+# 🌱 Phase 1 — Pre‑Release Polish (Current Phase)
 
-These tasks help present hewd as a polished, mature CLI tool.
+_Goal: polish the tool so it feels professional, consistent, and pleasant to use._
 
-### 🔹 Documentation Cleanup (in progress)
+### 🔹 Documentation Polish
 
-- /docs/ folder structure
-- Getting started guide
-- Command‑specific documentation
-- GitHub Action documentation
-- Diff engine documentation
-- Roadmap
-- Configuration guide
-- Machine-output schema documentation
-- Updated README (short, skimmable, professional)
+- Create `/docs/` folder structure ✔
+- Getting started guide ✔
+- Command-specific docs (doctor, diff, fix, scan, export, badge) ✔
+- GitHub Action docs ✔
+- Roadmap ✔
+- Configuration guide ✔
+- Machine-output schema ✔
+- Updated README (light, skimmable, professional) ✔
+- Add demo output to README ✔
 
-### 🔹 CLI UX Polish
+### 🔹 CLI UX Polish (in progress)
 
-- Review --help text for all commands
-- Ensure examples are included for every command
-- Consistent formatting in error messages
-- Add emoji severity indicators (⚠️, 🔥, ℹ️)
-- Make pretty output more visually balanced
+- Rewrite `--help` text for all commands
+- Add examples for each command
+- Consistent error messages
+- Severity emojis (`⚠️`, `🔥`, `ℹ️`)
+- Improve alignment & pretty output spacing
 
 ### 🔹 Output Polish
 
-- Improve formatting of diff Markdown tables
-- Add `<details>` sections for collapsed issue lists
-- Add compact summary section to Markdown diff
+- Improve diff Markdown tables
+- Add `<details>` collapsing sections for long output
+- Add compact summary section to diff MD output
+- Improve terminal pretty output formatting
 
-This polish makes the project feel “real” to new visitors.
+This makes hewd easy to understand, easy to adopt, and pleasant to use.
 
 ---
 
-## 🚀 Phase 2 — Initial Public Release (v0.1.0)
+# 🚀 Phase 2 — Initial Public Release (`v0.1.0`)
 
-Tasks for the first tagged release:
+_Goal: ship the first public version of hewd._
 
 ### 🔹 Release Engineering
 
-- Tag v0.1.0 using existing release workflow
+- Tag `v0.1.0`
+- Use existing GitHub Release workflow
 - Generate binaries for Linux/macOS/Windows
 - Write release notes
 
-### 🔹 Improved Installation Support
+### 🔹 Installation Support
 
 - Provide `go install github.com/jbakchr/hewd/cmd/hewd@latest` instructions
-- Add installation tests
-- Consider providing a Homebrew tap (optional)
+- Validate compilation via CI
+- (Optional) Provide a Homebrew tap
 
 ### 🔹 Example Repository
 
-Provide a small demo repo showing:
+Create a minimal repo demonstrating the tool:
 
-- a before/after diff
-- GitHub Action comments
-- doctor JSON report
+- before/after diff
+- GitHub Action PR comment
+- doctor report
 - badge usage
 
-This helps new users understand the value instantly.
+This helps new users immediately understand hewd’s value.
 
 ---
 
-## 🧪 Phase 3 — Testing & Stability
+# 🧪 Phase 3 — Testing & Stability
 
-These tasks solidify hewd’s reliability.
+_Goal: increase confidence and reliability._
 
 ### 🔹 Test Coverage
 
 - Unit tests for diff engine
 - Unit tests for regression gating
-- Tests for rule engine grouping/sorting
-- Integration tests for doctor mode
-- Integration tests for fix mode
+- Tests for rule grouping/sorting
+- Integration tests for:
+  - doctor
+  - scan
+  - fix
+  - export
+- End-to-end test: `scan → doctor → export → diff`
 
 ### 🔹 Schema Stability
 
-- Version MachineOutput format
-- Document breaking-change policy for schemas
-- Provide schema samples in /docs
+- Confirm versioning strategy for `MachineOutput`
+- Document breaking-change policy
+- Provide schema samples under `/docs/`
 
-### 🔹 Robustness
+### 🔹 Error Handling & Robustness
 
-- Handle missing files gracefully
-- More helpful error messages
-- Validate config files (.hewd/config.yaml)
+- More user-friendly error messages
+- Confirm behavior on missing files
+- Validate `.hewd/config.yaml`
 
 ---
 
-## 📈 Phase 4 — Feature Expansion
+# 📈 Phase 4 — Feature Expansion
 
-These tasks extend hewd’s usefulness.
+_Goal: add more convenience, more rules, better outputs._
 
-### 🔹 Extended Auto-Fixers
+### 🔹 Extended Auto‑Fixers
 
 - README scaffolding
 - SECURITY.md template
 - CODEOWNERS generation
-- ADR template scaffolding
+- ADR template generation
 
 ### 🔹 Additional Rules
 
-- Repo smell detection (e.g., “many languages but no docs”)
+- Repo smell detection
 - Dependency file inconsistencies
 - Build file detection
-- Outdated documentation detection (timestamps, mismatches)
+- Outdated/stale documentation detection via timestamps
 
-### 🔹 New Output Formats
+### 🔹 Output Formats
 
-- HTML reports (single-file output)
+- HTML single-page report
 - Raw text mode
-- More detailed JSON schema for issues
+- Expanded JSON schema for advanced tooling
 
 ---
 
-## 🌐 Phase 5 — Ecosystem & Integrations
+# 🌐 Phase 5 — Ecosystem Integrations
+
+_Goal: expand hewd into a multi-CI and multi-environment ecosystem._
 
 ### 🔹 GitHub Action Enhancements
 
-- Upload diff artifacts automatically
-- Auto-detect base report (no need for diff-old)
-- Auto-run export before diff
-- Support merging doctor + diff into unified PR comment
+- Upload JSON & MD diff artifacts
+- Auto-detect base report (no manual `diff-old` needed)
+- Auto-run export inside action
+- Optionally merge doctor + diff into one PR comment
 
-### 🔹 GitLab CI Integration
+### 🔹 GitLab Integration
 
-Support incoming GitLab users with:
-
+- GitLab MR comment support
 - JUnit output
-- GitLab MR comments
-- Artifact export tools
+- GitLab artifact support
 
-### 🔹 VSCode Extension (future)
+### 🔹 VSCode Extension
 
 - Inline documentation completeness hints
-- Project health dashboard
+- Side-panel project health dashboard
 
 ---
 
-## 🧭 Phase 6 — Big Vision & Long‑Term
+# 🧭 Phase 6 — Big Vision (Long‑Term)
 
-These are forward-looking ideas that could greatly expand hewd’s impact.
+_Goal: evolve hewd into a more comprehensive ecosystem._
 
-### 🔮 hewd Web Dashboard (self-hosted)
+### 🔮 hewd Web Dashboard
 
 - Upload/export reports
-- View project history
-- Visual score evolution
-- Multi-project views
+- Visualize project score timelines
+- Multi-repository view
+- Compare repos side-by-side
 
 ### 🔮 Plugin System
 
-Let users write custom rules, e.g.:
+Allow user-defined or org-defined rules:
 
-- project-specific documentation rules
-- organization-wide structure checks
-- custom config checks
+- custom documentation rules
+- organization-specific structure rules
+- custom fixers
+- extended export format
 
 ### 🔮 Project Templates
 
-Generate project skeletons:
+Generate project scaffolding:
 
 ```bash
-hewd init --template=go-service
-hewd init --template=python-lib
+hewd init --template go-service
+hewd init --template python-lib
 ```
 
-Each template includes:
+Templates include:
 
 - README
 - docs folder
-- CI
+- CI pipelines
 - CONTRIBUTING
 - CHANGELOG
 - starter code layout
 
 ---
 
-## 🎉 Summary
+# 🎉 Summary
 
-`hewd` is currently in the polishing phase, with all major features implemented:
+hewd is now in the **pre‑release polishing phase**, with all major features complete:
 
-- rich diff engine
+- diff engine
 - export schema
 - auto-fix system
 - scoring
 - GitHub Action
 - regression gating
 
-Next immediate steps:
+### **Next immediate steps:**
 
-- polish output and docs
-- prepare for v0.1.0 release
-- create a small example repo
+- CLI help text polish
+- Output polish (pretty + Markdown)
+- Prepare for `v0.1.0` release
+- Create example repo
 
-Beyond that, hewd has the potential to become a **general tool for repository maturity, documentation quality, and maintainability tracking** — a niche with real value and very few good tools.
+Beyond that, hewd is well-positioned to become a powerful ecosystem for repository maturity, documentation quality, and maintainability tracking — something very few tools provide today.
 
+---
 
+# ✔ Ready for next step?
 
+If you'd like, I can now help you with:
+
+- Polishing CLI help text (Option 1)
+- Polishing diff MD output (Option 2)
+- Creating an example repo
+- Preparing a v0.1.0 release
+- Adding badges to README
+- Writing a changelog
+
+Just tell me what you want to do next!
