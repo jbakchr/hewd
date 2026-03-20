@@ -1,31 +1,31 @@
 # 📘 _**hewd**_ — Project Health, Documentation & Structure Toolkit
 
-_`hewd` is a fast, dependency‑free CLI for analyzing, comparing, and improving the overall health of software repositories._
-
+`hewd` is a fast, dependency‑free CLI for analyzing, comparing, and improving the overall health of software repositories.
+ 
 It helps teams enforce documentation standards, maintain consistent structure, detect regressions, and automatically fix common issues — locally or in CI.
 
 ---
 
-## ✨ Features
+# ✨ Features
 
 - 🔍 **Scan** repositories for documentation, configuration, structure, and metadata
-- 🩺 **Run diagnostics** via `hewd doctor`
-- 🧮 **Compute scores** for documentation, config, and structure
-- 🔁 **Compare reports** with `hewd diff` (new issues, resolved issues, score deltas)
+- 🩺 **Diagnose** project health via `hewd doctor`
+- 🧮 **Score** documentation, config, and structure quality
+- 🔁 **Compare reports** using `hewd diff` (new issues, resolved issues, score deltas)
 - 🚨 **Regression gating** for CI pipelines
-- 🧾 **Machine‑readable JSON/YAML output**
-- 📝 **Markdown reports** for PR comments
+- 🧾 **Machine-readable JSON/YAML output**
+- 📝 **Markdown reports** for GitHub PR comments
 - 🧰 **Auto‑fix** missing docs and CI files
-- 🏷️ **Badge generator** (SVG score badge)
+- 🏷️ **SVG badge generator** (health score badge)
 - 🤖 **GitHub Action** with PR comment updating
 
-Full documentation is available in the docs/ directory.
+Full documentation lives in the `docs/` directory.
 
 ---
 
-## 🚀 Quick Start
+# 🚀 Quick Start
 
-### Install (build from source)
+## Install (build from source)
 
 ```bash
 git clone https://github.com/jbakchr/hewd
@@ -34,13 +34,13 @@ go build -o hewd ./cmd/hewd
 sudo mv hewd /usr/local/bin/hewd
 ```
 
-### Scan your project
+## Scan your project
 
 ```bash
 hewd scan --pretty
 ```
 
-### Run diagnostics
+## Run diagnostics
 
 ```bash
 hewd doctor
@@ -52,137 +52,109 @@ Generate a Markdown report:
 hewd doctor --md > health.md
 ```
 
-### Export machine‑readable output
+## Export machine‑readable data
 
 ```bash
 hewd export --output hewd.json
 ```
 
-### Compare two reports (diff engine)
+## Compare two reports (diff engine)
 
 ```bash
 hewd diff old.json new.json
 ```
 
-Pretty, JSON, YAML, and Markdown output modes available.
+Supports pretty, JSON, YAML, and Markdown output modes.
 
 ---
 
-## 📊 Demo Output — What `hewd` Looks Like in Practice
+# 📊 Example Output
 
-### 🔍 Example: Running `hewd doctor`
+## 🔍 Example: Running `hewd doctor`
 
 ```bash
 ===== OVERALL SCORE =====
-  82 / 100
+ 82 / 100
 
 ===== CATEGORY SCORES =====
-  Documentation:   70
-  Config:          90
-  Structure:       85
+ Documentation: 70
+ Config:        90
+ Structure:     85
 
 ===== DOCUMENTATION ISSUES =====
-  - DOC_LICENSE_MISSING (warn): LICENSE file is missing.
-  - DOC_CONTRIBUTING_MISSING (info): CONTRIBUTING.md not found.
+ - DOC_LICENSE_MISSING (warn): LICENSE file is missing.
+ - DOC_CONTRIBUTING_MISSING (info): CONTRIBUTING.md not found.
 
 ===== CONFIG ISSUES =====
-  (none)
+ (none)
 
 ===== STRUCTURE ISSUES =====
-  - STR_DOCS_DIR_MISSING (warn): docs/ directory not found.
+ - STR_DOCS_DIR_MISSING (warn): docs/ directory not found.
 ```
 
 ---
 
-### 🔁 Example: Running hewd diff old.json new.json
+## 🔁 Example: Diff Output
 
 ```bash
 ===== OVERALL SCORE =====
 Old: 78
 New: 87
 Change: +9 ↑
-
 ===== CATEGORY SCORES =====
-Documentation:   65 → 75   (+10)
-Config:          80 → 84   (+4)
-Structure:       90 → 92   (+2)
-
+Documentation: 65 → 75 (+10)
+Config:        80 → 84 (+4)
+Structure:     90 → 92 (+2)
 ===== NEW ISSUES =====
 (none)
-
 ===== RESOLVED ISSUES =====
 documentation
-  - DOC_LICENSE_MISSING (warn)
-  - DOC_README_STALE (info)
+ - DOC_LICENSE_MISSING (warn)
+ - DOC_README_STALE (info)
 ```
 
 ---
 
-### 🤖 Example: GitHub PR Comment (Markdown)
+## 🤖 Example: GitHub PR Comment (Markdown)
+
+_(Produced with `hewd diff --md`)_
 
 ```bash
 # 📊 Hewd Diff Report
 
 ## 📈 Score Summary
-
-| Metric         | Old  | New  | Δ     | Trend |
-|----------------|------|------|-------|-------|
-| Overall Score  |   78 |   87 |   +9  | 🟩⬆️   |
-| Documentation  |   65 |   75 |  +10  | 🟩⬆️   |
-| Config         |   80 |   84 |   +4  | 🟩⬆️   |
-| Structure      |   90 |   92 |   +2  | 🟩⬆️   |
-
----
-
-## 🆕 New Issues
-_No new issues! 🎉_
-
-## ✅ Resolved Issues
-### documentation
-- **DOC_LICENSE_MISSING** (warn)
-- **DOC_README_STALE** (info)
+...
 ```
 
----
-
-## 🔁 Example: Markdown Diff Output
-
-```bash
-hewd diff old.json new.json --md > diff.md
-```
-
-This produces a GitHub‑friendly report with:
+Includes:
 
 - Score changes
 - Category score deltas
 - New issues
 - Resolved issues
-- Grouped/sorted sections
-- Emojis and trend indicators
-
-Ideal for PR comments.
-
-Learn more → docs/commands/diff.md
+- Trend indicators
+- GitHub‑friendly formatting
 
 ---
 
-## 🤖 GitHub Action
+# 🤖 GitHub Action
 
-`hewd` includes a first‑class GitHub Action that can:
+hewd includes a first‑class GitHub Action to:
 
 - Run `hewd doctor` or `hewd diff`
-- Post or update PR comments
+- Post/update PR comments
 - Run regression gating (`--fail-on-any-regression`)
-- Export Markdown + JSON diff output
+- Publish Markdown + JSON artifacts
 
-Minimal GitHub Action usage:
+Minimal usage:
 
-```bash
+```yaml
 jobs:
   hewd:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: ./.github/actions/hewd-action
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -190,65 +162,65 @@ jobs:
           md-report: true
 ```
 
-Full documentation → docs/github-action.md
+See: `docs/github-action.md`
 
 ---
 
-## 🧰 Auto‑Fix Mode
+# 🧰 Auto‑Fix Mode
 
 ```bash
-hewd fix
-hewd fix --apply
+hewd fix           # dry run
+hewd fix --apply   # write generated files
 ```
 
-Can generate:
+Creates:
 
 - LICENSE
 - CONTRIBUTING.md
 - CHANGELOG.md
-- .github/workflows/ci.yml
 - docs/ directory
+- CI workflow templates
 
-More fixers will arrive in future versions.
-
-Learn more → docs/commands/fix.md
-
----
-
-## 📚 Documentation
-
-All extended/technical documentation is located in the **/docs** directory:
-
-- 📘 Getting Started — docs/getting-started.md
-- 🩺 Doctor Command — docs/commands/doctor.md
-- 🔁 Diff Command — docs/commands/diff.md (to be added)
-- 🔧 Fix Command — docs/commands/fix.md (to be added)
-- 🧾 Machine Output — docs/machine-output.md (to be added)
-- ⚙️ Configuration — docs/configuration.md (to be added)
-- 🤖 GitHub Action — docs/github-action.md (to be added)
-- 🗺️ Roadmap — docs/roadmap.md
-
-This keeps the README clean while giving power users all the detail they need.
+More auto-fixers coming in future releases.
 
 ---
 
-## 🏗 Roadmap
+# 📚 Documentation
 
-See the full roadmap here:
-👉 docs/roadmap.md
+Located under the **`docs/`** directory:
 
-`hewd` is currently in the **pre‑release polishing phase, preparing for v0.1.0**.
+- 📘 Getting Started — `docs/getting-started.md`
+- 🩺 Doctor — `docs/commands/doctor.md`
+- 🔁 Diff — `docs/commands/diff.md`
+- 🔧 Fix — `docs/commands/fix.md`
+- 🧾 Machine Output — `docs/machine-output.md`
+- ⚙️ Configuration — `docs/configuration.md`
+- 🤖 GitHub Action — `docs/github-action.md`
+- 🗺️ Roadmap — `docs/roadmap.md`
+
+This keeps the README focused and user-friendly.
 
 ---
 
-## 📄 License
+# 🏗 Project Roadmap
+
+The full roadmap is available here:
+
+👉 `docs/roadmap.md`
+
+**Current status:**  
+hewd is in **Phase 2 — v0.1.0 Release Preparation**, with CLI UX polishing complete and release engineering underway.
+
+---
+
+# 📄 License
 
 To be determined.
 
 ---
 
-🔗 Links
+# 🔗 Links
 
-- Source: https://github.com/jbakchr/hewd
-- Issues: https://github.com/jbakchr/hewd/issues
-- Releases: https://github.com/jbakchr/hewd/releases
+- Source: <https://github.com/jbakchr/hewd>
+- Issues: <https://github.com/jbakchr/hewd/issues>
+- Releases: <https://github.com/jbakchr/hewd/releases>
