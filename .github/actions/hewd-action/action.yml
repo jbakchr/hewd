@@ -29,13 +29,9 @@ inputs:
     default: "${{ github.token }}"
 
   pr-comment:
-    description: "Post Markdown doctor report as a pull request comment"
+    description: "Post Markdown doctor report as a PR comment"
     required: false
     default: "true"
-
-  # ----------------------------
-  # NEW INPUTS FOR PHASE 8 (DIFF)
-  # ----------------------------
 
   diff:
     description: "Run hewd diff instead of hewd doctor"
@@ -58,33 +54,31 @@ inputs:
     default: "true"
 
   diff-pr-comment:
-    description: "Post diff as a pull request comment"
+    description: "Post diff as a PR comment"
     required: false
     default: "true"
 
 runs:
   using: "composite"
   steps:
-    # ----------------------------
-    # STEP 1: Check out the repo
-    # ----------------------------
-    - name: Check out repository
+    - name: Checkout Repository
       uses: actions/checkout@v4
 
-    # ----------------------------
-    # STEP 2: Build the hewd binary
-    # ----------------------------
-    - name: Build hewd
+    - name: Build hewd CLI
       shell: bash
       run: |
         cd ${{ github.workspace }}
         go build -o hewd ./cmd/hewd
         chmod +x hewd
+        echo "${{ github.workspace }}" >> $GITHUB_PATH
 
-    # ----------------------------
-    # STEP 3: Run the entrypoint script
-    # ----------------------------
-    - name: Run hewd Action
+    - name: Move hewd to PATH
+      shell: bash
+      run: |
+        mv "${{ github.workspace }}/hewd" /usr/local/bin/hewd
+        chmod +x /usr/local/bin/hewd
+
+    - name: Run Hewd Action
       shell: bash
       run: $GITHUB_ACTION_PATH/entrypoint.sh
 
