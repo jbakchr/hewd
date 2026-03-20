@@ -17,7 +17,31 @@ func newFixCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "fix",
-		Short: "Automatically fix common documentation and configuration issues",
+		Short: "Automatically generate missing documentation, structure, and CI files.",
+		Long: `hewd fix analyzes the repository for missing documentation, structure,
+and configuration files, and automatically generates recommended assets. 
+This includes files such as LICENSE, CONTRIBUTING.md, CHANGELOG.md, default CI 
+workflows, and the docs/ directory.
+
+By default, fixes are shown as a dry-run without making changes. Use the 
+--apply flag to write the generated files to disk. hewd fix is safe to run 
+repeatedly—existing files are never overwritten.
+
+This command is ideal for preparing repositories for publication, enforcing 
+documentation standards, and quickly bootstrapping missing project components.`,
+		Example: `
+  # Show which fixes would be applied (dry-run)
+  hewd fix
+
+  # Apply fixes and write files to disk
+  hewd fix --apply
+
+  # Fix missing documentation before running diagnostics
+  hewd fix --apply && hewd doctor
+
+  # Preview fixes and save output to a file
+  hewd fix > fix-preview.txt
+`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cwd, _ := os.Getwd()
 			cfg, _ := config.Load(cwd)
@@ -58,7 +82,7 @@ func newFixCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVar(&apply, "apply", false, "Apply fixes instead of dry-run")
+	cmd.Flags().BoolVar(&apply, "apply", false, "Apply fixes and write new files to disk (default: dry-run)")
 
 	return cmd
 }
