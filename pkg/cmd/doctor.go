@@ -22,10 +22,42 @@ import (
 func newDoctorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "doctor",
-		Short: "Run diagnostic checks on the project",
-		Long: `Run validation rules against the scanned project structure.
-Supports filtering (--only/--except), JSON/YAML/Markdown output, scoring,
-and CI-friendly exit codes.`,
+		Short: "Run full diagnostics and compute documentation, config, and structure scores.",
+		Long: `hewd doctor runs the full diagnostic engine on the current repository.
+It evaluates documentation, configuration, and structure using a curated set
+of rules, each with its own severity level (info, warn, error). The doctor
+command produces category scores, an overall health score, and detailed issue
+reports that describe missing files, incomplete documentation, missing CI
+workflows, and other structural problems.
+
+The output can be formatted as pretty terminal text, JSON, YAML, or Markdown.
+Markdown output is ideal for pull request comments, while JSON and YAML are
+well-suited for CI pipelines and automated quality gates.
+
+Use 'hewd doctor' regularly to verify project health, enforce documentation
+standards, and maintain consistent quality across repositories.`,
+		Example: `
+  # Run full diagnostics using pretty output (default)
+  hewd doctor
+
+  # Output Markdown report (ideal for PR comments)
+  hewd doctor --md > health.md
+
+  # Output JSON for CI pipelines or dashboards
+  hewd doctor --json > doctor.json
+
+  # Output YAML
+  hewd doctor --yaml
+
+  # Only evaluate documentation-related rules
+  hewd doctor --only documentation
+
+  # Exclude config-related checks
+  hewd doctor --except config
+
+  # Fail CI if any warning-level issues occur
+  hewd doctor --fail-on=warn
+`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cwd, err := os.Getwd()
@@ -132,15 +164,15 @@ and CI-friendly exit codes.`,
 	}
 
 	// Flags
-	cmd.Flags().StringSlice("only", []string{}, "Only run rules from these categories (comma-separated)")
-	cmd.Flags().StringSlice("except", []string{}, "Exclude rules from these categories (comma-separated)")
-	cmd.Flags().Bool("json", false, "Output machine-readable JSON")
-	cmd.Flags().Bool("yaml", false, "Output machine-readable YAML")
+	cmd.Flags().StringSlice("only", []string{}, "Only run rules from specific categories (comma-separated)")
+	cmd.Flags().StringSlice("except", []string{}, "Skip rules from specific categories (comma-separated)")
+	cmd.Flags().Bool("json", false, "Output the diagnostic report in JSON format")
+	cmd.Flags().Bool("yaml", false, "Output the diagnostic report in YAML format")
 	cmd.Flags().Bool("pretty", false, "Pretty-print JSON")
-	cmd.Flags().String("fail-on", "error", "Fail on this severity or above (info|warn|error)")
-	cmd.Flags().Bool("score", false, "Show overall project score")
-	cmd.Flags().Bool("category-score", false, "Show breakdown of category scores")
-	cmd.Flags().Bool("md", false, "Output detailed Markdown report")
+	cmd.Flags().String("fail-on", "error", "Fail if a rule of this severity or higher occurs (info|warn|error)")
+	cmd.Flags().Bool("score", false, "Print only the overall score (CI-friendly)")
+	cmd.Flags().Bool("category-score", false, "Print only category scores (documentation/config/structure)")
+	cmd.Flags().Bool("md", false, "Output the diagnostic report in Markdown format")
 
 	return cmd
 }
