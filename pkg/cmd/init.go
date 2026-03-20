@@ -11,8 +11,30 @@ import (
 func newInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Initialize hewd configuration",
-		Long:  `Create a .hewd/config.yaml file with default settings.`,
+		Short: "Initialize a new hewd configuration in the current repository.",
+		Long: `hewd init creates a new .hewd/config.yaml file in the current repository.
+The configuration file allows you to customize rule behavior, severity levels,
+category filtering, and scan include/exclude paths used by all hewd commands.
+
+Running 'hewd init' is optional—hewd works without configuration—but creating
+a config file is recommended for teams that want consistent project standards,
+CI behavior, or customized scoring rules tailored to their repositories.
+
+The command is safe to run multiple times. It will not overwrite an existing 
+configuration unless the --force flag is explicitly provided.`,
+		Example: `
+  # Initialize hewd configuration (recommended for new repos)
+  hewd init
+
+  # Initialize config with explicit confirmation
+  hewd init --force
+
+  # View generated config
+  cat .hewd/config.yaml
+
+  # Modify rules or severity levels after initialization
+  nano .hewd/config.yaml
+`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cfgDir := filepath.Join(".", ".hewd")
