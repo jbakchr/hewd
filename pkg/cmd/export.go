@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 
 	"github.com/jbakchr/hewd/internal/api"
 	"github.com/jbakchr/hewd/internal/config"
@@ -17,31 +18,32 @@ import (
 	"github.com/jbakchr/hewd/internal/version"
 )
 
-// newExportCmd provides:
-//
-//	hewd export --output hewd.json
-//
-// This produces a stable, versioned machine-readable JSON file containing:
-// - overall score
-// - category scores
-// - full rule results
-// - fixable items
-// - metadata (version, timestamp)
 func newExportCmd() *cobra.Command {
-	var output string
+	var (
+		output     string
+		yamlOut    bool
+		jsonOut    bool
+		prettyJSON bool
+	)
 
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export a complete machine-readable project health report.",
-		Long: `hewd export generates a complete, machine-readable JSON or YAML report
-describing the documentation, configuration, and structural health of the 
-current repository. The exported output uses hewd's stable MachineOutput schema, 
-which includes overall scores, category scores, rule results, fixable items, 
-metadata, timestamps, and version information.
+		Long: `hewd export generates a complete, machine-readable report describing the
+documentation, configuration, and structural health of the current repository.
 
-Exported reports are ideal for CI pipelines, dashboards, trend tracking, and 
-use as input for 'hewd diff'. The command uses the same diagnostic engine as 
-'hewd doctor' but omits human-focused formatting in favor of stable, 
+The exported report follows hewd's stable MachineOutput schema, which includes:
+
+  • Overall project health score
+  • Category scores (documentation, config, structure)
+  • Detailed rule results with severity levels
+  • Fixable items
+  • Version metadata
+  • Timestamps
+
+Exported reports are ideal for CI pipelines, dashboards, trend tracking, and
+use as input for 'hewd diff'. The command uses the same diagnostic engine as
+'hewd doctor' but omits human-focused formatting in favor of stable,
 automation-friendly output structures.`,
 		Example: `
   # Export project health to JSON
@@ -64,30 +66,42 @@ automation-friendly output structures.`,
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			if output == "" {
-				return fmt.Errorf("--output is required (example: hewd export --output hewd.json)")
+			// ----- Required flag -----
+			if output == "" && !jsonOut && !yamlOut {
+				return fmt.Errorf("--output is required unless using --json or --yaml directly to stdout")
 			}
 
-			cwd, _ := os.Getwd()
+			// ----- Format conflicts -----
+			if jsonOut && yamlOut {
+				return fmt.Errorf("cannot combine --json and --yaml")
+			}
+
+			if yamlOut && prettyJSON {
+				return fmt.Errorf("cannot combine --yaml and --pretty (pretty applies only to JSON)")
+			}
+
+			// ----- Directory -----
+			cwd, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("could not determine working directory: %w", err)
+			}
+
 			cfg, _ := config.Load(cwd)
 
-			// Scan project structure
+			// ----- Scan project -----
 			summary, err := scan.ScanDirectory(cwd)
 			if err != nil {
 				return err
 			}
 
-			// Run all rules (no category filtering here; export is always full data)
+			// ----- Run all rules -----
 			results := rules.RunAll(summary, cfg, nil, nil)
-
-			// Wrap rule results with category
 			scoredRules := score.NewScoredRules(results)
 
-			// Scores
 			categoryScores := score.ScoreByCategory(scoredRules, cfg)
 			overallScore := score.Score(results, cfg)
 
-			// Fixable items
+			// ----- Fixable items -----
 			rawFixes := fix.DetectFixes(results, cwd)
 			var fixables []api.FixableItem
 			for _, f := range rawFixes {
@@ -98,7 +112,7 @@ automation-friendly output structures.`,
 				})
 			}
 
-			// Build the machine-readable API output
+			// ----- Build machine output -----
 			machine := api.MachineOutput{
 				SchemaVersion:  1,
 				HewdVersion:    version.Version,
@@ -109,22 +123,65 @@ automation-friendly output structures.`,
 				Fixable:        fixables,
 			}
 
-			// JSON encoding
+			// ----- YAML Output -----
+			if yamlOut {
+				data, err := yaml.Marshal(machine)
+				if err != nil {
+					return err
+				}
+
+				// stdout mode
+				if output == "" {
+					fmt.Println(string(data))
+					return nil
+				}
+
+				return writeExportFile(output, data)
+			}
+
+			// ----- JSON Output -----
+			if jsonOut {
+				var data []byte
+				if prettyJSON {
+					data, err = json.MarshalIndent(machine, "", "  ")
+				} else {
+					data, err = json.Marshal(machine)
+				}
+				if err != nil {
+					return err
+				}
+
+				if output == "" {
+					fmt.Println(string(data))
+					return nil
+				}
+
+				return writeExportFile(output, data)
+			}
+
+			// ----- Default: JSON to file -----
 			data, err := json.MarshalIndent(machine, "", "  ")
 			if err != nil {
 				return err
 			}
 
-			// Write file
-			if err := os.WriteFile(output, data, 0644); err != nil {
-				return err
-			}
-
-			fmt.Printf("Export complete → %s\n", output)
-			return nil
+			return writeExportFile(output, data)
 		},
 	}
 
-	cmd.Flags().StringVar(&output, "output", "", "Path to write machine-readable JSON (required)")
+	// ----- Flags -----
+	cmd.Flags().StringVar(&output, "output", "", "Path to write machine-readable output (JSON by default)")
+	cmd.Flags().BoolVar(&yamlOut, "yaml", false, "Export report as YAML (writes to stdout if --output is not set)")
+	cmd.Flags().BoolVar(&jsonOut, "json", false, "Export report as JSON (writes to stdout if --output is not set)")
+	cmd.Flags().BoolVar(&prettyJSON, "pretty", false, "Pretty-print JSON output")
+
 	return cmd
+}
+
+func writeExportFile(path string, data []byte) error {
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		return err
+	}
+	fmt.Printf("Export complete → %s\n", path)
+	return nil
 }
