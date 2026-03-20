@@ -22,6 +22,10 @@ func newDiffCmd() *cobra.Command {
 			yamlFlag, _ := cmd.Flags().GetBool("yaml")
 			mdFlag, _ := cmd.Flags().GetBool("md")
 
+			failScoreDrop, _ := cmd.Flags().GetInt("fail-on-score-drop")
+			failNewErrors, _ := cmd.Flags().GetBool("fail-on-new-errors")
+			failAny, _ := cmd.Flags().GetBool("fail-on-any-regression")
+
 			oldPath := args[0]
 			newPath := args[1]
 
@@ -55,6 +59,21 @@ func newDiffCmd() *cobra.Command {
 			// Compute full diff
 			result := diff.ComputeDiff(&oldReport, &newReport)
 
+			gate := diff.EvaluateRegressionGates(result, failScoreDrop, failNewErrors, failAny)
+
+			if gate.Failed {
+				// Optional: print reasons unless in JSON/YAML mode
+				if !jsonFlag && !yamlFlag {
+					fmt.Println("\n❌ Regression detected:")
+					for _, r := range gate.Reasons {
+						fmt.Printf(" - %s\n", r)
+					}
+				}
+
+				// Exit code 1 means "regression failure"
+				return fmt.Errorf("regression gating failed")
+			}
+
 			// Make machine-readable structure
 			out := diff.MakeDiffOutput(result, &oldReport, &newReport)
 
@@ -85,6 +104,13 @@ func newDiffCmd() *cobra.Command {
 	flags.Bool("json", false, "Output diff result in JSON format")
 	flags.Bool("yaml", false, "Output diff result in YAML format")
 	flags.Bool("md", false, "Output diff result in Markdown format")
+
+	flags.Int("fail-on-score-drop", 0,
+		"Fail if score drops by N or more points")
+	flags.Bool("fail-on-new-errors", false,
+		"Fail if any new error-level issues appear")
+	flags.Bool("fail-on-any-regression", false,
+		"Fail on any regression (score drop, new issues)")
 
 	return cmd
 }
