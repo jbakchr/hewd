@@ -9,52 +9,16 @@ import (
 
 	"github.com/jbakchr/hewd/internal/api"
 	"github.com/jbakchr/hewd/internal/diff"
+	"github.com/jbakchr/hewd/internal/helptext"
 )
 
 func newDiffCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "diff <old.json> <new.json>",
-		Short: "Compare two hewd JSON reports and show score, category, and issue differences.",
-		Long: `hewd diff compares two machine-readable hewd reports (JSON) and highlights how
-a project's health has changed over time. The diff engine computes:
-
-  • Score deltas
-  • Category score changes
-  • New issues
-  • Resolved issues
-  • Grouped and sorted issue summaries
-
-Output formats include pretty terminal output, JSON, YAML, and Markdown. Markdown
-is ideal for GitHub pull request comments, while JSON/YAML are well-suited for
-CI pipelines and automated analysis workflows.
-
-The diff command also supports regression gating. CI pipelines can fail
-automatically if score decreases, new issues appear, or any regression is
-detected. This makes 'hewd diff' a powerful tool for maintaining documentation
-quality and repository structure during code review.`,
-		Example: `
-  # Compare two reports and print pretty diff output
-  hewd diff old.json new.json
-
-  # Output Markdown diff (ideal for GitHub PR comments)
-  hewd diff old.json new.json --md > diff.md
-
-  # Output JSON diff for CI pipelines
-  hewd diff old.json new.json --json > diff.json
-
-  # Output YAML diff
-  hewd diff old.json new.json --yaml
-
-  # Fail CI if the score drops by at least 5 points
-  hewd diff old.json new.json --fail-on-score-drop=5
-
-  # Fail CI if any new error-level issues appear
-  hewd diff old.json new.json --fail-on-new-errors
-
-  # Fail on any regression (recommended for PRs)
-  hewd diff old.json new.json --fail-on-any-regression
-`,
-		Args: cobra.ExactArgs(2),
+		Use:     helptext.DiffUse,
+		Short:   helptext.DiffShort,
+		Long:    helptext.DiffLong,
+		Example: helptext.DiffExample,
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// --------------------------------------

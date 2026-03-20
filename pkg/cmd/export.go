@@ -12,6 +12,7 @@ import (
 	"github.com/jbakchr/hewd/internal/api"
 	"github.com/jbakchr/hewd/internal/config"
 	"github.com/jbakchr/hewd/internal/fix"
+	"github.com/jbakchr/hewd/internal/helptext"
 	"github.com/jbakchr/hewd/internal/rules"
 	"github.com/jbakchr/hewd/internal/scan"
 	"github.com/jbakchr/hewd/internal/score"
@@ -27,43 +28,10 @@ func newExportCmd() *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "export",
-		Short: "Export a complete machine-readable project health report.",
-		Long: `hewd export generates a complete, machine-readable report describing the
-documentation, configuration, and structural health of the current repository.
-
-The exported report follows hewd's stable MachineOutput schema, which includes:
-
-  • Overall project health score
-  • Category scores (documentation, config, structure)
-  • Detailed rule results with severity levels
-  • Fixable items
-  • Version metadata
-  • Timestamps
-
-Exported reports are ideal for CI pipelines, dashboards, trend tracking, and
-use as input for 'hewd diff'. The command uses the same diagnostic engine as
-'hewd doctor' but omits human-focused formatting in favor of stable,
-automation-friendly output structures.`,
-		Example: `
-  # Export project health to JSON
-  hewd export --output hewd.json
-
-  # Export in YAML format
-  hewd export --yaml --output hewd.yaml
-
-  # Pretty-print JSON to stdout
-  hewd export --json --pretty
-
-  # Use export to generate reports for diff comparison
-  hewd export --output old.json
-  # ... make changes ...
-  hewd export --output new.json
-  hewd diff old.json new.json
-
-  # Pipe export data to another command
-  hewd export --json | jq '.score'
-`,
+		Use:     helptext.ExportUse,
+		Short:   helptext.ExportShort,
+		Long:    helptext.ExportLong,
+		Example: helptext.ExportExample,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// ----- Required flag -----
