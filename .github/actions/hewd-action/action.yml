@@ -1,6 +1,7 @@
 name: "hewd Project Health Checker"
-description: "Run hewd doctor with scoring, categories, and Markdown output"
+description: "Run hewd doctor with scoring, categories, and Markdown output—or run hewd diff for PR comparisons"
 author: "jbakchr"
+
 inputs:
   fail-on:
     description: "Fail on this severity or higher (info|warn|error)"
@@ -18,7 +19,7 @@ inputs:
     default: ""
 
   md-report:
-    description: "Output Markdown report"
+    description: "Output Markdown doctor report"
     required: false
     default: "true"
 
@@ -28,13 +29,64 @@ inputs:
     default: "${{ github.token }}"
 
   pr-comment:
-    description: "Post Markdown report as a pull request comment"
+    description: "Post Markdown doctor report as a pull request comment"
+    required: false
+    default: "true"
+
+  # ----------------------------
+  # NEW INPUTS FOR PHASE 8 (DIFF)
+  # ----------------------------
+
+  diff:
+    description: "Run hewd diff instead of hewd doctor"
+    required: false
+    default: "false"
+
+  diff-old:
+    description: "Path to old hewd JSON report"
+    required: false
+    default: ""
+
+  diff-new:
+    description: "Path to new hewd JSON report"
+    required: false
+    default: ""
+
+  diff-md-report:
+    description: "Post Markdown diff output"
+    required: false
+    default: "true"
+
+  diff-pr-comment:
+    description: "Post diff as a pull request comment"
     required: false
     default: "true"
 
 runs:
-  using: "node16"
-  main: "dist/index.cjs"
+  using: "composite"
+  steps:
+    # ----------------------------
+    # STEP 1: Check out the repo
+    # ----------------------------
+    - name: Check out repository
+      uses: actions/checkout@v4
+
+    # ----------------------------
+    # STEP 2: Build the hewd binary
+    # ----------------------------
+    - name: Build hewd
+      shell: bash
+      run: |
+        cd ${{ github.workspace }}
+        go build -o hewd ./cmd/hewd
+        chmod +x hewd
+
+    # ----------------------------
+    # STEP 3: Run the entrypoint script
+    # ----------------------------
+    - name: Run hewd Action
+      shell: bash
+      run: $GITHUB_ACTION_PATH/entrypoint.sh
 
 branding:
   icon: "check-circle"
