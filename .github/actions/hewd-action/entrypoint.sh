@@ -7,7 +7,7 @@ echo "Working directory: $(pwd)"
 echo ""
 
 # ------------------------------------------------------------
-# Read Inputs (GitHub exposes inputs as environment variables)
+# SAFE DEFAULTS FOR ALL INPUT VALUES
 # ------------------------------------------------------------
 FAIL_ON="${INPUT_FAIL_ON:-error}"
 ONLY="${INPUT_ONLY:-}"
@@ -23,17 +23,23 @@ DIFF_MD="${INPUT_DIFF_MD_REPORT:-true}"
 DIFF_PR_COMMENT="${INPUT_DIFF_PR_COMMENT:-false}"
 
 echo "Inputs:"
+echo "  fail-on: $FAIL_ON"
+echo "  only: $ONLY"
+echo "  except: $EXCEPT"
+echo "  md-report: $MD_REPORT"
+echo "  github-token set? $( [[ -n "$TOKEN" ]] && echo yes || echo no )"
+echo "  pr-comment: $PR_COMMENT"
 echo "  diff: $DIFF"
 echo "  diff-old: $DIFF_OLD"
 echo "  diff-new: $DIFF_NEW"
-echo "  diff-md-report: $DIFF_MD"
+echo "  diff-md: $DIFF_MD"
 echo "  diff-pr-comment: $DIFF_PR_COMMENT"
 echo ""
 
 # ------------------------------------------------------------
-# Authenticate GH CLI (required for PR comments)
+# Authenticate GH CLI (only if needed)
 # ------------------------------------------------------------
-if [[ "${PR_COMMENT}" == "true" || "${DIFF_PR_COMMENT}" == "true" ]]; then
+if [[ "$PR_COMMENT" == "true" || "$DIFF_PR_COMMENT" == "true" ]]; then
     if [[ -z "$TOKEN" ]]; then
         echo "❌ GitHub token not provided. PR comments cannot be posted."
         exit 1
@@ -43,18 +49,18 @@ if [[ "${PR_COMMENT}" == "true" || "${DIFF_PR_COMMENT}" == "true" ]]; then
 fi
 
 # ------------------------------------------------------------
-# Helper: find existing PR comment matching our unique marker
+# Helper: Find existing PR comment matching our marker
 # ------------------------------------------------------------
 find_existing_comment() {
     local pr_number="$1"
 
     gh api repos/"${GITHUB_REPOSITORY}"/issues/"${pr_number}"/comments \
-      --jq '.[] | select(.body | contains("📊 Hewd Diff Report")) | .id' \
-      2>/dev/null || true
+        --jq '.[] | select(.body | contains("📊 Hewd Diff Report")) | .id' \
+        2>/dev/null || true
 }
 
 # ------------------------------------------------------------
-# Helper: create OR update PR comment
+# Helper: Create or update PR comment
 # ------------------------------------------------------------
 post_or_update_pr_comment() {
     local pr_number="$1"
@@ -66,14 +72,14 @@ post_or_update_pr_comment() {
     if [[ -n "$existing_id" ]]; then
         echo "Updating existing PR comment #$existing_id..."
         gh api \
-          repos/"${GITHUB_REPOSITORY}"/issues/comments/"${existing_id}" \
-          -X PATCH \
-          -F body="$(cat "$body_file")"
+            repos/"${GITHUB_REPOSITORY}"/issues/comments/"${existing_id}" \
+            -X PATCH \
+            -F body="$(cat "$body_file")"
     else
         echo "Creating new PR comment..."
         gh api \
-          repos/"${GITHUB_REPOSITORY}"/issues/"${pr_number}"/comments \
-          -f body="$(cat "$body_file")"
+            repos/"${GITHUB_REPOSITORY}"/issues/"${pr_number}"/comments \
+            -f body="$(cat "$body_file")"
     fi
 }
 
@@ -84,30 +90,30 @@ if [[ "$DIFF" == "true" ]]; then
     echo "== DIFF MODE =="
     echo ""
 
-    # Validate required paths
+    # Validate paths
     if [[ -z "$DIFF_OLD" || -z "$DIFF_NEW" ]]; then
         echo "❌ diff-old and diff-new must both be provided when diff=true"
         exit 1
     fi
 
-    # Create machine-readable diff
+    # Generate machine-readable JSON diff
     echo "Generating diff.json..."
     hewd diff "$DIFF_OLD" "$DIFF_NEW" --json > diff.json
 
-    # Markdown diff (for PR comments)
+    # Generate Markdown diff for PR comments
     if [[ "$DIFF_MD" == "true" ]]; then
         echo "Generating diff.md..."
         hewd diff "$DIFF_OLD" "$DIFF_NEW" --md > diff.md
     fi
 
-    # Regression gating (strict mode)
+    # Regression gating
     echo "Running regression gating..."
     set +e
     hewd diff "$DIFF_OLD" "$DIFF_NEW" --fail-on-any-regression
     DIFF_EXIT=$?
     set -e
 
-    # PR comment
+    # Post PR comment
     if [[ "$DIFF_PR_COMMENT" == "true" && -f diff.md ]]; then
         PR_NUMBER=$(jq -r .pull_request.number "$GITHUB_EVENT_PATH" 2>/dev/null || true)
 
@@ -119,9 +125,9 @@ if [[ "$DIFF" == "true" ]]; then
         fi
     fi
 
-    # Fail CI on regression
+    # CI fail if regression
     if [[ $DIFF_EXIT -ne 0 ]]; then
-        echo "❌ Regression detected. Failing Action."
+        echo "❌ Regression detected. Failing CI."
         exit 1
     fi
 
@@ -130,7 +136,7 @@ if [[ "$DIFF" == "true" ]]; then
 fi
 
 # ------------------------------------------------------------
-# DEFAULT MODE: HEWD DOCTOR
+# DOCTOR MODE (default)
 # ------------------------------------------------------------
 echo "== DOCTOR MODE =="
 echo ""
@@ -143,7 +149,7 @@ else
     hewd doctor > report.md
 fi
 
-# PR comment (doctor mode)
+# PR comment in doctor mode
 if [[ "$PR_COMMENT" == "true" ]]; then
     PR_NUMBER=$(jq -r .pull_request.number "$GITHUB_EVENT_PATH" 2>/dev/null || true)
 
