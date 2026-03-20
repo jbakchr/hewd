@@ -21,63 +21,37 @@ func emojiForDelta(delta int) string {
 func WriteMarkdown(result DiffResult, old api.MachineOutput, new api.MachineOutput) string {
 	var b strings.Builder
 
-	// -----------------------------------------------------
-	// HEADER
-	// -----------------------------------------------------
-	b.WriteString("# 📊 Hewd Diff Report\n\n")
-	b.WriteString("---\n\n")
+	b.WriteString("# 📊 Hewd Diff Report\n\n---\n\n")
 
-	// -----------------------------------------------------
-	// SCORE SUMMARY
-	// -----------------------------------------------------
 	b.WriteString("## 📈 Score Summary\n\n")
 
-	b.WriteString("| Metric | Old | New | Δ |\n")
-	b.WriteString("|--------|-----|-----|----|\n")
+	b.WriteString("| Metric         | Old  | New  | Δ     | Trend |\n")
+	b.WriteString("|----------------|------|------|-------|--------|\n")
 
-	// Overall score row
-	b.WriteString(fmt.Sprintf(
-		"| Overall Score | **%d** | **%d** | %s **%+d** |\n",
-		old.Score, new.Score, emojiForDelta(result.ScoreDelta), result.ScoreDelta,
-	))
+	// Helper for table row
+	writeRow := func(name string, oldVal, newVal, delta int) {
+		emoji := emojiForDelta(delta)
+		arrow := "➡️"
+		if delta > 0 {
+			arrow = "⬆️"
+		} else if delta < 0 {
+			arrow = "⬇️"
+		}
+		b.WriteString(fmt.Sprintf(
+			"| %-14s | %4d | %4d | %+5d | %s%s |\n",
+			name, oldVal, newVal, delta, emoji, arrow,
+		))
+	}
 
-	// Documentation
-	docDelta := result.CategoryDeltas["documentation"]
-	b.WriteString(fmt.Sprintf(
-		"| Documentation | **%d** | **%d** | %s **%+d** |\n",
-		old.CategoryScores.Documentation,
-		new.CategoryScores.Documentation,
-		emojiForDelta(docDelta),
-		docDelta,
-	))
-
-	// Config
-	cfgDelta := result.CategoryDeltas["config"]
-	b.WriteString(fmt.Sprintf(
-		"| Config | **%d** | **%d** | %s **%+d** |\n",
-		old.CategoryScores.Config,
-		new.CategoryScores.Config,
-		emojiForDelta(cfgDelta),
-		cfgDelta,
-	))
-
-	// Structure
-	structDelta := result.CategoryDeltas["structure"]
-	b.WriteString(fmt.Sprintf(
-		"| Structure | **%d** | **%d** | %s **%+d** |\n",
-		old.CategoryScores.Structure,
-		new.CategoryScores.Structure,
-		emojiForDelta(structDelta),
-		structDelta,
-	))
+	writeRow("Overall Score", old.Score, new.Score, result.ScoreDelta)
+	writeRow("Documentation", old.CategoryScores.Documentation, new.CategoryScores.Documentation, result.CategoryDeltas["documentation"])
+	writeRow("Config", old.CategoryScores.Config, new.CategoryScores.Config, result.CategoryDeltas["config"])
+	writeRow("Structure", old.CategoryScores.Structure, new.CategoryScores.Structure, result.CategoryDeltas["structure"])
 
 	b.WriteString("\n---\n\n")
 
-	// -----------------------------------------------------
-	// NEW ISSUES
-	// -----------------------------------------------------
+	// New Issues
 	groupedNew := GroupIssues(result.NewIssues)
-
 	b.WriteString("## 🆕 New Issues\n\n")
 	if len(result.NewIssues) == 0 {
 		b.WriteString("_No new issues! 🎉_\n\n")
@@ -85,10 +59,7 @@ func WriteMarkdown(result DiffResult, old api.MachineOutput, new api.MachineOutp
 		for category, issues := range groupedNew {
 			b.WriteString(fmt.Sprintf("### %s\n", category))
 			for _, issue := range issues {
-				b.WriteString(fmt.Sprintf(
-					"- **%s** (%s) — %s\n",
-					issue.ID, issue.Level, issue.Message,
-				))
+				b.WriteString(fmt.Sprintf("- **%s** (%s) — %s\n", issue.ID, issue.Level, issue.Message))
 			}
 			b.WriteString("\n")
 		}
@@ -96,11 +67,8 @@ func WriteMarkdown(result DiffResult, old api.MachineOutput, new api.MachineOutp
 
 	b.WriteString("\n---\n\n")
 
-	// -----------------------------------------------------
-	// RESOLVED ISSUES
-	// -----------------------------------------------------
+	// Resolved Issues
 	groupedResolved := GroupIssues(result.ResolvedIssues)
-
 	b.WriteString("## ✅ Resolved Issues\n\n")
 	if len(result.ResolvedIssues) == 0 {
 		b.WriteString("_No resolved issues._\n\n")
@@ -108,10 +76,7 @@ func WriteMarkdown(result DiffResult, old api.MachineOutput, new api.MachineOutp
 		for category, issues := range groupedResolved {
 			b.WriteString(fmt.Sprintf("### %s\n", category))
 			for _, issue := range issues {
-				b.WriteString(fmt.Sprintf(
-					"- **%s** (%s) — %s\n",
-					issue.ID, issue.Level, issue.Message,
-				))
+				b.WriteString(fmt.Sprintf("- **%s** (%s) — %s\n", issue.ID, issue.Level, issue.Message))
 			}
 			b.WriteString("\n")
 		}
