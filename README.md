@@ -1,24 +1,48 @@
-# 📘 _**hewd**_ — Project Health, Documentation & Structure Toolkit
+# 📘 **Updated README.md (fully aligned with roadmap & Phase 1E)**
+
+Below is your complete, ready-to-paste replacement for `README.md`.
+
+It reflects:
+
+- All completed Phase 1A–1E work
+- Harmonized helptexts
+- Polished pretty output
+- Standardized error system
+- Current status (about to enter Phase 2: Release Engineering)
+- Accurate and consistent command examples
+- Clean structure and professional style
+- GitHub-friendly formatting
+
+---
+
+# 📘 **README.md**
+
+_(Drop‑in replacement)_
+
+````markdown
+# 📘 hewd — Project Health, Documentation & Structure Toolkit
 
 `hewd` is a fast, dependency‑free CLI for analyzing, comparing, and improving the overall health of software repositories.  
-It helps teams enforce documentation standards, maintain consistent structure, detect regressions, and automatically fix common issues — locally or in CI.
+It evaluates documentation, configuration, and structural conventions, produces machine‑readable reports, highlights regressions, and can automatically generate missing project files.
 
 ---
 
 ## ✨ Features
 
 - 🔍 **Scan** repositories for documentation, configuration, structure, and metadata
-- 🩺 **Diagnose** project health via `hewd doctor`
-- 🧮 **Score** documentation, config, and structure categories
-- 🔁 **Compare reports** using `hewd diff` (new issues, resolved issues, score deltas)
+- 🩺 **Run diagnostics** via `hewd doctor`
+- 🧮 **Score** documentation, configuration, and structure
+- 🔁 **Compare reports** using `hewd diff` (score deltas, new/resolved issues)
 - 🚨 **Regression gating** for CI pipelines
-- 🧾 **Machine-readable JSON/YAML export**
+- 🧾 **Machine‑readable JSON/YAML output**
 - 📝 **Markdown reports** for GitHub PR comments
-- 🧰 **Auto-fix** missing docs and CI files
-- 🏷️ **SVG badge** generator
+- 🧰 **Auto‑fix** missing documentation and CI files
+- 🏷️ **SVG badge generator**
 - 🤖 **GitHub Action** with PR comment updating
+- 🎨 **Pretty‑printed terminal output** with severity icons and color
+- ❗ **Standardized error system** with hints and clean formatting
 
-Full documentation is available in the `docs/` directory.
+Full documentation lives in the `docs/` directory.
 
 ---
 
@@ -32,18 +56,30 @@ cd hewd
 go build -o hewd ./cmd/hewd
 sudo mv hewd /usr/local/bin/hewd
 ```
+````
 
-### Scan your project
+---
+
+## 🔍 Scan your project
 
 ```bash
 hewd scan --pretty
 ```
 
-### Run diagnostics
+---
+
+## 🩺 Run diagnostics
 
 ```bash
 hewd doctor
 ```
+
+Pretty output will highlight:
+
+- score
+- category scores
+- issues with severity icons
+- fixable items
 
 Generate a Markdown report:
 
@@ -51,94 +87,82 @@ Generate a Markdown report:
 hewd doctor --md > health.md
 ```
 
-### Export machine-readable data
+---
+
+## 📤 Export machine‑readable data
 
 ```bash
-hewd export --output hewd.json
+hewd export --json --output hewd.json
 ```
 
-### Compare reports (diff engine)
+Pretty JSON:
+
+```bash
+hewd export --json --pretty
+```
+
+YAML:
+
+```bash
+hewd export --yaml --output hewd.yaml
+```
+
+---
+
+## 🔁 Compare reports (diff engine)
 
 ```bash
 hewd diff old.json new.json
 ```
 
-Pretty, JSON, YAML, and Markdown output supported.
-
-***
-
-## 📊 Example Outputs
-
-### 🔍 Running `hewd doctor`
+Markdown diff for PR comments:
 
 ```bash
-===== OVERALL SCORE =====
- 82 / 100
-
-===== CATEGORY SCORES =====
- Documentation: 70
- Config:        90
- Structure:     85
-
-===== DOCUMENTATION ISSUES =====
- - DOC_LICENSE_MISSING (warn): LICENSE file is missing.
- - DOC_CONTRIBUTING_MISSING (info): CONTRIBUTING.md not found.
-
-===== CONFIG ISSUES =====
- (none)
-
-===== STRUCTURE ISSUES =====
- - STR_DOCS_DIR_MISSING (warn): docs/ directory not found.
+hewd diff old.json new.json --md > diff.md
 ```
 
-***
+Supports pretty, JSON, YAML, and Markdown output modes.
 
-### 🔁 Diff Example
+---
+
+## 🧰 Auto‑Fix Missing Files
 
 ```bash
-===== OVERALL SCORE =====
-Old: 78
-New: 87
-Change: +9 ↑
-
-===== CATEGORY SCORES =====
-Documentation: 65 → 75 (+10)
-Config:        80 → 84 (+4)
-Structure:     90 → 92 (+2)
-
-===== NEW ISSUES =====
-(none)
-
-===== RESOLVED ISSUES =====
-documentation
- - DOC_LICENSE_MISSING (warn)
- - DOC_README_STALE (info)
+hewd fix                  # dry-run
+hewd fix --apply          # write new files
 ```
 
-***
+Creates:
 
-### 🤖 GitHub PR Comment Example (`--md`)
+- LICENSE
+- CONTRIBUTING.md
+- CHANGELOG.md
+- docs/ directory
+- CI workflow templates
 
-Markdown reports include:
+More fixers coming in future releases.
 
-*   Score changes
-*   Category score deltas
-*   New issues / resolved issues
-*   Trend indicators
-*   Grouped sections for readability
+---
 
-***
+## 🏷️ Badge Generation
+
+```bash
+hewd badge --output badge.svg
+```
+
+Useful for READMEs, dashboards, and CI artifacts.
+
+---
 
 ## 🤖 GitHub Action
 
-The included GitHub Action can:
+hewd includes a first‑class GitHub Action enabling:
 
-*   Run `hewd doctor` or `hewd diff`
-*   Post or update PR comments
-*   Run regression gating (`--fail-on-any-regression`)
-*   Export Markdown + JSON diff artifacts
+- PR comments (`hewd diff --md`)
+- regression gating
+- machine‑readable artifacts
 
-Minimal setup:
+Minimal usage:
 
 ```yaml
 jobs:
@@ -153,63 +177,96 @@ jobs:
           md-report: true
 ```
 
-See `docs/github-action.md` for details.
+---
 
-***
+## 🎨 Pretty Output
 
-## 🧰 Auto‑Fix Mode
+hewd uses:
 
-```bash
-hewd fix           # dry-run
-hewd fix --apply   # apply fixes
-```
+- cyan headers
+- GitHub‑style severity icons (`ℹ️`, `⚠️`, `❌`)
+- colorized score deltas (`↑`, `↓`)
+- consistent section formatting
 
-Creates:
+Example:
 
-*   LICENSE
-*   CONTRIBUTING.md
-*   CHANGELOG.md
-*   docs/ directory
-*   Basic CI workflow templates
+    ===== OVERALL SCORE =====
+     85 / 100
 
-More fixers arriving in future releases.
+    ===== DOCUMENTATION ISSUES =====
+      ⚠️  DOC_LICENSE_MISSING — LICENSE file is missing
+      ℹ️  DOC_README_STALE    — README.md may be outdated
 
-***
+---
+
+## ❗ Standardized Error System
+
+hewd uses a consistent, helpful error style:
+
+    error: cannot combine --json and --yaml
+    hint: use only one machine-readable format at a time
+
+Top-level errors include the invoked command:
+
+    error (hewd doctor): failed to read config
+    hint: ensure .hewd/config.yaml is valid yaml
+
+All internal commands use structured `HewdError` values.
+
+---
 
 ## 📚 Documentation
 
-All extended documentation lives in **`docs/`**:
+Located in `docs/`:
 
-*   📘 Getting Started — `docs/getting-started.md`
-*   🩺 Doctor — `docs/commands/doctor.md`
-*   🔁 Diff — `docs/commands/diff.md`
-*   🔧 Fix — `docs/commands/fix.md`
-*   🧾 Machine Output — `docs/machine-output.md`
-*   ⚙️ Configuration — `docs/configuration.md`
-*   🤖 GitHub Action — `docs/github-action.md`
-*   🗺️ Roadmap — `docs/roadmap.md`
+- 📘 Getting Started — `docs/getting-started.md`
+- 🩺 Doctor Command — `docs/commands/doctor.md`
+- 🔁 Diff Command — `docs/commands/diff.md`
+- 🔧 Fix Command — `docs/commands/fix.md`
+- 🧾 Machine Output — `docs/machine-output.md`
+- ⚙️ Configuration — `docs/configuration.md`
+- 🤖 GitHub Action — `docs/github-action.md`
+- 🗺️ Roadmap — `docs/roadmap.md`
 
-***
+---
 
-## 🏗 Roadmap
+## 🏗 Project Roadmap
 
 See the full roadmap:  
 👉 `docs/roadmap.md`
 
-*Current status: hewd is in **Phase 2 — v0.1.0 Release Preparation**.*
+**Current status:**  
+`hewd` has completed Phases **1A through 1D**, and Phase **1E** is actively being implemented.  
+After Phase 1E is complete, work begins on **Phase 2 — v0.1.0 Release Engineering**.
 
-***
+---
 
 ## 📄 License
 
 To be determined.
 
-***
+---
 
 ## 🔗 Links
 
-*   Source: <https://github.com/jbakchr/hewd>
-*   Issues: <https://github.com/jbakchr/hewd/issues>
-*   Releases: <https://github.com/jbakchr/hewd/releases>
+- Source: <https://github.com/jbakchr/hewd>
+- Issues: <https://github.com/jbakchr/hewd/issues>
+- Releases: <https://github.com/jbakchr/hewd/releases>
 
+```
 
+---
+
+# 🎉 README.md is now fully updated and aligned
+This version reflects:
+
+- Your exact project state
+- Phase 1E progress
+- Error system rewrite
+- Pretty output redesign
+- Command grouping
+- Unified flags
+- Clean, professional tone
+- Modern CLI UX
+
+```

@@ -1,150 +1,165 @@
+**Prompt [Thanks. Everything now seems to work. But before... | Try in Copilot Chat](https://m365.cloud.microsoft/chat/entity1-d870f6cd-4aa5-4d42-9626-ab690c041429/eyJpZCI6IlZYTmxjbFl4ZkdoMGRIQnpPaTh2YzNWaWMzUnlZWFJsTFdsdWRDNXZabVpwWTJVdVkyOXRMM3hQU1VRNk5UVTVZVEV5WWprdE9EUTVNaTAwWW1Wa0xUazJOR0V0TW1ZME1HTXlNekF4Wm1JMWZHVTROalZoTldJekxXSmpZbUl0TkdZMU15MDRaRGd3TFdVMVkySmxPREZsWkdRMVpud3lNREkyTFRBekxUSXhWREV6T2pFME9qQXlMalEwTURRMk5UVmEiLCJzY2VuYXJpbyI6InNoYXJlTGlua1ZpYVJpY2hDb3B5IiwicHJvcGVydGllcyI6eyJwcm9tcHRTb3VyY2UiOiJ1c2VyIiwiY2xpY2tUaW1lc3RhbXAiOiIyMDI2LTAzLTIxVDEzOjE0OjAyLjQ4OVoifSwiY2hhdFR5cGUiOiJ3ZWIiLCJ2ZXJzaW9uIjoxLjF9)**
+Thanks. Everything now seems to work. But before we continue I would like for you to update our current <entity type="File" ReferenceId="677dee53-700e-446b-8ccd-56250d2981b4">roadmap.md</entity> so that we can keep better track of everything. I've attached the current <entity type="File" ReferenceId="677dee53-700e-446b-8ccd-56250d2981b4">roadmap.md</entity> file for your reference.
+**Response**
+Absolutely — updating the roadmap **does not require any external factual knowledge**, so according to the developer instructions, **no search tools will be used** and **no citations will appear**.  
+This is purely an **internal project document refactor**, which is fully allowed.
+
+You’ve now completed a huge amount of work:
+
+- Phase 1A → Helptext extraction
+- Phase 1B → Flag consistency + shared validation
+- Phase 1C → Helptext harmonization
+- Phase 1D → Pretty output polish
+- Phase 1E → Error system standardization (in progress, doctor.go done)
+
+The roadmap should reflect all of this progress **and** show exactly what remains.
+
+Below is your **updated, clean, fully aligned roadmap.md**, rewritten to match the current state of hewd and prepare for Phase 2 (Release Engineering).
+
+You can replace your existing `docs/roadmap.md` with this version.
+
+---
+
 # 🗺️ **hewd Roadmap (Updated 2026‑03)**
 
-A clear overview of completed milestones, the current development stage, and future directions for the hewd project health toolkit.
+_A clear guide to completed work, current focus, and future direction._
 
 ---
 
 # ⭐ Phase 0 — Completed Foundations
 
-These milestones represent the core hewd architecture, all of which are stable and fully implemented.
+These core components are shipped, stable, and power all other phases.
 
-### ✔ Core Capabilities
+### ✔ Core Features
 
 - Repository scanner
 - Rule engine (documentation, config, structure categories)
 - Scoring engine
-- Auto‑fix system (safe, non‑destructive fixes)
+- Machine‑readable output (JSON/YAML)
+- Auto‑fix system (safe, never overwrites existing files)
+- SVG badge generator
 - `.hewd/config.yaml` support
-- Machine‑readable export (JSON/YAML)
-- SVG badge generation
+- Configuration loader
+- CI‑friendly behavior across commands
 
 ### ✔ Diff Engine
 
-- Score delta calculation
-- Category delta calculation
+- Score delta computation
+- Category delta computation
 - New/resolved issue detection
 - Pretty diff output
-- JSON/YAML/Markdown diff output
-- Regression gating
+- JSON/YAML/Markdown diff formats
+- Regression gating logic
 
 ### ✔ GitHub Integration
 
 - Composite GitHub Action
-- PR comment creation & updating
-- Markdown diff for PRs
-- CI exit‑codes for gating logic
-
-### ✔ Architecture & Codebase Structure
-
-- Clean package layout (`internal/`, `pkg/cmd/`, `docs/`)
-- Consistent naming patterns
-- Helper utilities for shared CLI logic
+- PR comment updating (Markdown diff)
+- Machine‑readable artifacts
+- Exit codes suitable for CI gating
 
 ---
 
-# 🌱 Phase 1 — CLI UX & Developer Experience Polish
+# 🌱 Phase 1 — CLI UX, Error System, and Dev Experience Polish
 
-_(This phase is now complete, with one optional optional micro‑polish remaining.)_
-
-### ✔ Phase 1A — Helptext Extraction & Unification
-
-- All `Use`, `Short`, `Long`, `Example` blocks moved out of command files
-- New `internal/helptext` package
-- Command files significantly cleaner
-- Unified tone, structure, and voice across all commands
-
-### ✔ Phase 1B — Global Flag Consistency Audit
-
-- Standardized flag names (`--json`, `--yaml`, `--md`, `--pretty`, etc.)
-- Unified conflict rules across commands
-- Shared validation helper added (`ValidateOutputFormatFlags()`)
-
-### ✔ Phase 1C — Helptext Harmonization
-
-- All helptext files rewritten for consistency and professionalism
-- Matched indentation, wording, formatting, and example structure
-- Eliminated HTML entities and outdated phrasing
-
-### ✔ Phase 1D — Pretty Output Polish
-
-- Unified ANSI color palette (cyan headers, red/yellow/blue severities, green/red trend arrows)
-- Consistent section headers across all commands
-- Shared severity icon logic (`SeverityVisual()`)
-- Standardized pretty‑output formatting for `scan`, `doctor`, and `diff`
-- Category mapping standardized using `rules.CategoryForRule()`
-- Clean, professional TTY output across the entire CLI
-
-### ⚪ _Optional Micro‑Polish (not required before Phase 2)_
-
-A tiny list of optional improvements, which can be done later if desired:
-
-- Column alignment refinement
-- Additional end‑summary blocks in pretty output
-- Minor whitespace or stylistic tuning
-- Monochrome fallback for terminals without color
-
-These are explicitly **optional** and should not block release preparation.
+_(The largest pre‑release polish phase. Mostly complete.)_
 
 ---
 
-# 🚀 Phase 1E — Error Message Standardization
+## ✔ Phase 1A — Helptext Extraction & Organization
 
-_(This is the next active development phase.)_
+- All command helptexts moved to `internal/helptext`
+- Commands significantly simplified
+- Unified style across all descriptions
+- Fully consistent example formatting
 
-### 🎯 Goals
+## ✔ Phase 1B — Global Flag Consistency Audit
 
-Improve the clarity, consistency, predictability, and professionalism of all error messages.
+- Same ordering and naming across commands
+- Consistent descriptions
+- Output‑format flags normalized (`--json`, `--yaml`, `--md`, `--pretty`)
+- Added shared validator: `ValidateOutputFormatFlags()`
+- Clear and actionable validation errors
 
-### 🔹 Planned Work
+## ✔ Phase 1C — Helptext Harmonization
 
-- Normalize error phrasing (tone, sentence style, lower‑case starts, no trailing periods)
-- Improve context in error messages (e.g., include file paths, rule names)
-- Ensure consistent patterns for command‑specific errors
-- Standardize common failure messages across commands
-- Audit all `fmt.Errorf` calls for clarity
-- Provide clearer guidance in CI‑failure scenarios
-- Confirm markdown/JSON/YAML mode errors follow same structure
-- Clearly distinguish:
-  - user‑input errors
-  - repo/content errors
-  - internal logic errors
+- Unified structure (Use → Short → Long → Example)
+- Consistent paragraph formatting
+- Clean, readable Markdown bullets
+- No HTML entities
+- Parallel tone and style across all commands
 
-### 🔹 Expected Outcome
+## ✔ Phase 1D — Pretty Output Polish
 
-A consistent, predictable error system that strengthens UX and makes CI behavior more intelligible.
+- Consistent color palette (cyan headers, red/yellow/blue severity, green/red trend arrows)
+- Section headers standardized (`===== HEADER =====`)
+- Clean spacing and indentation rules
+- Unified severity icons (GitHub‑style: ℹ️, ⚠️, ❌)
+- Shared `SeverityVisual()` helper
+- Modern and readable terminal output
+- Pretty output for scan, doctor, diff fully aligned
 
-After Phase 1E is complete, hewd will be fully ready for Phase 2.
+## ✔ Phase 1E — Error Message Standardization _(in progress)_
+
+### Completed so far:
+
+- New structured error type `HewdError{Msg, Hint}`
+- Colorized, lowercase `error:` prefix
+- Hints shown on separate lines
+- `%w` preserved for underlying error detail
+- Top-level errors formatted using `RootErr()`
+- `scan.go` fully updated
+- `doctor.go` fully updated
+- Markdown rendering helper restored
+- CI gating logic standardized
+- Output flag errors standardized
+- Pretty output error paths cleaned
+
+### Remaining for full completion:
+
+- Apply the new error system to:
+  - `diff.go`
+  - `export.go`
+  - `badge.go`
+  - `fix.go`
+  - `init.go`
+  - `main.go` (top-level error printing)
+- Update any remaining helpers (scan/config/diff/fix utilities) to use `cliutils.Err` / `ErrHint`
+- Final internal consistency check
+- Optional final micro‑polish of pretty outputs
+
+Once these are updated, Phase 1E is fully complete.
 
 ---
 
 # 🚀 Phase 2 — v0.1.0 Release Preparation
 
-_(This begins immediately after Phase 1E.)_
+_(Next major milestone — begins immediately after Phase 1E.)_
 
-### 🔹 Release Engineering
+### 🔹 Release Engineering Tasks
 
-- Create a `CHANGELOG.md`
-- Publish first official release notes
-- Build binaries for Linux/macOS/Windows
+- Create `CHANGELOG.md`
+- Write release notes
+- Build binaries for macOS/Linux/Windows
+- Verify installation paths (`go install`, binaries)
 - Tag `v0.1.0`
-- Verify installation pathways (`go install`, built binaries, GitHub Actions)
-- Optional: Homebrew tap for macOS users
+- Optional: Homebrew tap
 
 ### 🔹 Example Repository
 
-Create a demonstration repository showcasing:
+Demonstrates:
 
-- Before/after doctor reports
-- GitHub Action PR comment examples
-- Diff output examples (Markdown, JSON)
+- Before/after reports
+- GitHub PR comment example
 - Badge usage
-- `.hewd/config.yaml` patterns
+- `.hewd/config.yaml` guidance
+- Typical CI setup
 
 ### 🔹 Final Output Polish
 
-- Review spacing/indentation one last time
-- Ensure Markdown output for doctor/diff is perfect
-- Validate pretty output across varied repository sizes
+- Final spacing/alignment review
+- Ensure Markdown outputs are perfect
+- Cross‑check pretty output across large/small repos
 
 ---
 
@@ -153,21 +168,21 @@ Create a demonstration repository showcasing:
 ### 🔹 Unit Tests
 
 - Rule engine
-- Scoring
-- Diff engine
+- Scoring engine
 - Fix‑detection logic
+- Diff engine
 
 ### 🔹 Integration Tests
 
-- `scan → doctor → export` pipeline
-- `fix --apply`
-- diff regression gating
+- scan → doctor → export
+- fix → apply → re-scan
+- diff gating across branches
 
 ### 🔹 Schema Stability
 
-- Versioning strategy for `MachineOutput`
-- Backwards‑compatible schema handling
-- Clear documentation
+- Final MachineOutput schema
+- Backwards compatibility plan
+- Example schemas in docs
 
 ---
 
@@ -176,44 +191,44 @@ Create a demonstration repository showcasing:
 ### 🔹 Extended Auto‑Fixers
 
 - README scaffolding
-- SECURITY.md template
-- CODEOWNERS generator
-- ADR template generation
+- SECURITY.md
+- CODEOWNERS
+- ADR templates
 
 ### 🔹 More Rule Types
 
-- Repo smell detection
-- Build/config consistency checks
-- Outdated documentation heuristics
-- Language‑specific structure checks
+- Repo smell heuristics
+- Deprecated configs
+- Build/config consistency
+- Multi-language project layouts
 
-### 🔹 Additional Output Formats
+### 🔹 New Output Formats
 
-- Single‑file HTML report
+- Single‑file HTML
 - Raw text
-- Extended JSON schema with metadata
+- Extended metadata in JSON
 
 ---
 
-# 🌐 Phase 5 — Ecosystem Integrations
+# 🌐 Phase 5 — Ecosystem Integration
 
-### 🔹 GitHub Action Enhancements
+### 🔹 GitHub Action Expansion
 
-- Auto‑upload diff artifacts
-- Auto‑detect base report
-- Merge doctor+diff into unified PR comment
+- Auto-upload diff artifacts
+- Auto-detect old JSON for diff
+- Unified “doctor + diff” PR comment
 
-### 🔹 GitLab Integration
+### 🔹 GitLab support
 
-- MR comments
-- Artifact creation
-- JUnit‑style output
+- MR discussion comments
+- JUnit export
+- Artifact uploads
 
 ### 🔹 VS Code Extension
 
-- Inline rule hints
-- Project health dashboard
-- Fix suggestions
+- Inline diagnostics
+- Documentation quality hints
+- Sidebar health dashboard
 
 ---
 
@@ -222,34 +237,43 @@ Create a demonstration repository showcasing:
 ### 🔮 hewd Web Dashboard
 
 - Upload reports
-- Trend visualization
-- Multi‑project comparisons
-- Historical timelines
+- Project health trends
+- Multi-repo insights
 
-### 🔮 Plugin Architecture
+### 🔮 Plugin System
 
-- Custom rule packs
-- Organization‑level policies
-- Pluggable scoring systems
+- Custom scoring modules
+- Org‑specific rule packs
+- Plug-in rule evaluators
 
-### 🔮 Project Templates
+### 🔮 Templates
 
     hewd init --template go-service
     hewd init --template python-lib
 
-Includes:
+Templates provide:
 
-- README
 - docs/
+- README
 - CI workflows
 - CONTRIBUTING
 - CHANGELOG
-- Basic scaffolding
+- starter layout
 
 ---
 
 # 🎉 Summary
 
-hewd has now completed all major UX polish for commands, helptexts, and pretty output (Phase 1A–1D).
+hewd is now extremely close to its first official release.
 
-The project is currently entering **Phase 1E — Error Message Standardization**, the final step before moving to **Phase 2 — Release Engineering** and preparing the first tagged release (`v0.1.0`).
+You have completed:
+
+- Phase 1A
+- Phase 1B
+- Phase 1C
+- Phase 1D
+- Major portions of Phase 1E
+
+### The remaining work is sharply defined and small.
+
+Once Phase 1E is finished, Phase 2 (v0.1.0 release engineering) can begin immediately.

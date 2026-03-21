@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jbakchr/hewd/internal/cliutils"
 	"github.com/jbakchr/hewd/internal/config"
 	"github.com/jbakchr/hewd/internal/fix"
 	"github.com/jbakchr/hewd/internal/helptext"
@@ -24,50 +25,60 @@ func newFixCmd() *cobra.Command {
 
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			// Load working directory
+			// Determine working directory
 			cwd, err := os.Getwd()
 			if err != nil {
-				return fmt.Errorf("could not determine working directory: %w", err)
+				return cliutils.ErrHint(
+					fmt.Sprintf("failed to determine working directory: %v", err),
+					"ensure the current directory is accessible",
+				)
 			}
 
-			cfg, _ := config.Load(cwd)
+			// Load config (optional)
+			cfg, err := config.Load(cwd)
+			if err != nil {
+				return cliutils.ErrHint(
+					fmt.Sprintf("failed to load configuration: %v", err),
+					"ensure .hewd/config.yaml is valid yaml and readable",
+				)
+			}
 
 			// Scan project
 			summary, err := scan.ScanDirectory(cwd)
 			if err != nil {
-				return err
+				return cliutils.ErrHint(
+					fmt.Sprintf("failed to scan directory: %v", err),
+					"ensure you are running hewd inside a valid repository",
+				)
 			}
 
-			// Run full rule set — fix always considers all categories
+			// Run all rules — fix always considers all categories
 			results := rules.RunAll(summary, cfg, nil, nil)
 
 			// Detect fixable items
-			fixes := fix.DetectFixes(results, cwd)
-
-			if len(fixes) == 0 {
-				fmt.Println("No fixable issues found.")
-				return nil
+			fixables := fix.DetectFixes(results, cwd)
+			if len(fixables) == 0 {
+				return cliutils.Err("no fixable issues found")
 			}
 
-			// -------------------------
-			// DRY-RUN (default)
-			// -------------------------
+			// Dry‑run mode (default)
 			if !apply {
 				fmt.Println("Fixable issues:")
-				for _, f := range fixes {
+				for _, f := range fixables {
 					fmt.Printf("  - %s → %s\n", f.RuleID, f.Message)
 				}
-				fmt.Println("\nRun with --apply to apply these fixes.")
+				fmt.Println("\nRun with --apply to write these changes to disk.")
 				return nil
 			}
 
-			// -------------------------
-			// APPLY FIXES
-			// -------------------------
-			for _, f := range fixes {
+			// Apply fixes to disk
+			for _, f := range fixables {
 				fmt.Printf("Applying fix for %s...\n", f.RuleID)
 				if err := fix.ApplyFix(f); err != nil {
-					return fmt.Errorf("failed to apply fix for %s: %w", f.RuleID, err)
+					return cliutils.ErrHint(
+						fmt.Sprintf("failed to apply fix for %s: %v", f.RuleID, err),
+						"verify file permissions and repository structure",
+					)
 				}
 			}
 

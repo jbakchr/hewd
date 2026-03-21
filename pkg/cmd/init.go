@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jbakchr/hewd/internal/cliutils"
 	"github.com/jbakchr/hewd/internal/helptext"
 )
 
@@ -24,21 +25,23 @@ func newInitCmd() *cobra.Command {
 			cfgDir := filepath.Join(".", ".hewd")
 			cfgPath := filepath.Join(cfgDir, "config.yaml")
 
-			// Create .hewd directory if missing
-			if _, err := os.Stat(cfgDir); os.IsNotExist(err) {
-				if err := os.MkdirAll(cfgDir, 0755); err != nil {
-					return fmt.Errorf("failed to create .hewd directory: %w", err)
-				}
-				fmt.Println("Created .hewd/ directory")
+			// ensure directory exists
+			if err := os.MkdirAll(cfgDir, 0755); err != nil {
+				return cliutils.ErrHint(
+					fmt.Sprintf("failed to create directory %s: %v", cfgDir, err),
+					"ensure you have write permissions in the project root",
+				)
 			}
 
-			// If config already exists and no --force, stop
+			// warn if config exists unless forced
 			if _, err := os.Stat(cfgPath); err == nil && !force {
-				fmt.Println(".hewd/config.yaml already exists — use --force to overwrite.")
-				return nil
+				return cliutils.ErrHint(
+					".hewd/config.yaml already exists",
+					"use --force to overwrite the existing file",
+				)
 			}
 
-			// Default configuration template
+			// default configuration template
 			defaultCfg := `# hewd configuration file
 #
 # Defines rule behavior, severity overrides, scoring weights, and
@@ -54,9 +57,12 @@ scan:
     - vendor
 `
 
-			// Write config to disk
+			// write config
 			if err := os.WriteFile(cfgPath, []byte(defaultCfg), 0644); err != nil {
-				return fmt.Errorf("failed to write config.yaml: %w", err)
+				return cliutils.ErrHint(
+					fmt.Sprintf("failed to write file %s: %v", cfgPath, err),
+					"ensure you have write permissions in this directory",
+				)
 			}
 
 			if force {
