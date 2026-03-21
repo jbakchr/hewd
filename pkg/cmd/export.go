@@ -141,10 +141,12 @@ func newExportCmd() *cobra.Command {
 	cmd.GroupID = "reporting"
 
 	// ----- Flags -----
-	cmd.Flags().StringVar(&output, "output", "", "Path to write machine-readable output (JSON by default)")
-	cmd.Flags().BoolVar(&yamlOut, "yaml", false, "Export report as YAML (writes to stdout if --output is not set)")
-	cmd.Flags().BoolVar(&jsonOut, "json", false, "Export report as JSON (writes to stdout if --output is not set)")
-	cmd.Flags().BoolVar(&prettyJSON, "pretty", false, "Pretty-print JSON output")
+
+	cmd.Flags().StringVar(&output, "output", "", "Write output to the specified file path (required unless using stdout).")
+
+	cmd.Flags().BoolVar(&yamlOut, "yaml", false, "Export report in YAML format.")
+	cmd.Flags().BoolVar(&jsonOut, "json", false, "Export report in JSON format. Use --pretty for indented JSON.")
+	cmd.Flags().BoolVar(&prettyJSON, "pretty", false, "Pretty-print JSON output for readability.")
 
 	return cmd
 }

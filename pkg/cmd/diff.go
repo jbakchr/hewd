@@ -125,17 +125,14 @@ func newDiffCmd() *cobra.Command {
 	// --------------------------------------
 	// Flags
 	// --------------------------------------
-	flags := cmd.Flags()
-	flags.Bool("json", false, "Output diff result in JSON format")
-	flags.Bool("yaml", false, "Output diff result in YAML format")
-	flags.Bool("md", false, "Output diff result in Markdown format")
+	cmd.Flags().Bool("json", false, "Output diff results in JSON format. Use --pretty for indented JSON.")
+	cmd.Flags().Bool("yaml", false, "Output diff results in YAML format.")
+	cmd.Flags().Bool("md", false, "Output diff results in Markdown format.")
+	cmd.Flags().Bool("pretty", false, "Pretty-print JSON output for readability.")
 
-	flags.Int("fail-on-score-drop", 0,
-		"Fail if score drops by N or more points")
-	flags.Bool("fail-on-new-errors", false,
-		"Fail if any new error-level issues appear")
-	flags.Bool("fail-on-any-regression", false,
-		"Fail on any regression (score drop, new issues)")
+	cmd.Flags().Int("fail-on-score-drop", 0, "Fail if score drops by N or more points.")
+	cmd.Flags().Bool("fail-on-new-errors", false, "Fail if any new error-level issues appear.")
+	cmd.Flags().Bool("fail-on-any-regression", false, "Fail on any regression (score drop or new issues).")
 
 	return cmd
 }
