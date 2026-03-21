@@ -41,5 +41,4 @@ const RootExample = `
   hewd badge --output badge.svg
 
   # Initialize a hewd configuration file
-  hewd init
-`
+  hewd init`
