@@ -47,7 +47,7 @@ func printDoctorPretty(results []rules.Result) {
 		})
 
 		for _, r := range issues {
-			icon, color := cliutils.SeverityVisual(r.Level)
+			icon, color := rules.SeverityVisual(r.Level)
 
 			fileSuffix := ""
 			if r.File != "" {

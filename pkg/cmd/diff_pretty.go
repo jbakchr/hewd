@@ -62,7 +62,7 @@ func writePrettyDiff(d diff.DiffResult) error {
 // Shared issue printer for new/resolved issues
 func printIssues(list []score.ScoredRule) {
 	for _, r := range list {
-		icon, color := cliutils.SeverityVisual(r.Level)
+		icon, color := rules.SeverityVisual(r.Level)
 		cat := rules.CategoryForRule(r.ID)
 
 		fileSuffix := ""

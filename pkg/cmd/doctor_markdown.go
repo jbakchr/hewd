@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/jbakchr/hewd/internal/api"
-	"github.com/jbakchr/hewd/internal/cliutils"
 	"github.com/jbakchr/hewd/internal/rules"
 )
 
@@ -46,7 +45,7 @@ func renderMarkdown(m api.MachineOutput) string {
 		}
 
 		for _, r := range issues {
-			icon, _ := cliutils.SeverityVisual(r.Level)
+			icon, _ := rules.SeverityVisual(r.Level)
 
 			if r.File != "" {
 				b.WriteString(fmt.Sprintf(
