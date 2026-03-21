@@ -2,38 +2,35 @@ package helptext
 
 const ScanUse = "scan"
 
-const ScanShort = "Scan the repository and detect documentation, config, languages, and structure indicators."
+const ScanShort = "Scan the repository and detect documentation, config, and structure indicators."
 
-const ScanLong = `hewd scan performs a fast, lightweight analysis of the current repository.
-It detects documentation files, configuration files, programming languages,
-project metadata, and structural indicators such as the presence of a docs/
-directory or CI workflows.
+const ScanLong = `hewd scan performs a fast analysis of the current repository. It detects
+documentation files, configuration files, programming languages, metadata, and
+structural indicators such as docs/ directories or CI workflows.
 
-This command provides a high-level overview of your project's documentation and
-structure. It is often the first step before running 'hewd doctor' or exporting
-a machine-readable health report.
+Features:
 
-Scan output supports multiple formats:
+  • Fast repository scanning
+  • Language, file, and metadata detection
+  • Pretty, JSON, YAML, or Markdown output
+  • CI-friendly machine-readable modes
 
-  • Pretty (human-readable)
-  • JSON
-  • YAML
-
-This command is safe to run in both local development and CI environments.`
+Use hewd scan to get a quick overview of project structure before running
+'hewd doctor' or generating reports for automation.`
 
 const ScanExample = `
-  # Scan the current repository (pretty output)
+  # Pretty scan output
   hewd scan --pretty
 
-  # Scan and output JSON
+  # Output JSON
   hewd scan --json
 
-  # Scan and output YAML
+  # Output YAML
   hewd scan --yaml
 
   # Save JSON output
   hewd scan --json > scan.json
 
-  # Combine scan + doctor
+  # Combine scan and diagnostics
   hewd scan --pretty && hewd doctor
 `
