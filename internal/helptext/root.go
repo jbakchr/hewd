@@ -10,36 +10,36 @@ health scores, diff reports, and automated fixes.
 
 Features:
 
-  • Fast, dependency‑free repository scanner
-  • Curated rule engine for documentation, structure, and config
-  • Automated fix mode for common issues
+  • Fast, dependency-free repository scanner
+  • Curated rules for documentation, structure, and configuration
+  • Automated fixes for common issues
   • JSON, YAML, Markdown, and pretty outputs
   • Regression gating for CI pipelines
-  • GitHub Action with PR comment updates
+  • GitHub Action for PR comments
   • SVG badge generation
 
 Use hewd to maintain consistent documentation, detect regressions, enforce
 standards, and track repository maturity over time.`
 
 const RootExample = `
-  # Scan the repository and show a high-level summary
+  # Scan a repository
   hewd scan --pretty
 
-  # Run full diagnostics and generate a Markdown report
+  # Run full diagnostics and generate Markdown
   hewd doctor --md > health.md
 
   # Export machine-readable project health
   hewd export --output hewd.json
 
-  # Compare two reports (detect new/resolved issues)
+  # Compare reports using the diff engine
   hewd diff old.json new.json --md > diff.md
 
-  # Automatically fix missing documentation or CI files
+  # Apply automated fixes
   hewd fix --apply
 
-  # Generate an SVG badge showing project health score
+  # Generate an SVG badge
   hewd badge --output badge.svg
 
-  # Initialize a .hewd/config.yaml configuration file
+  # Initialize a hewd configuration file
   hewd init
 `
