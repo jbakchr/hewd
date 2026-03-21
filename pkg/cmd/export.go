@@ -137,6 +137,9 @@ func newExportCmd() *cobra.Command {
 		},
 	}
 
+	// ----- Command Group -----
+	cmd.GroupID = "reporting"
+
 	// ----- Flags -----
 	cmd.Flags().StringVar(&output, "output", "", "Path to write machine-readable output (JSON by default)")
 	cmd.Flags().BoolVar(&yamlOut, "yaml", false, "Export report as YAML (writes to stdout if --output is not set)")

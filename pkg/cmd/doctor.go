@@ -153,6 +153,9 @@ func newDoctorCmd() *cobra.Command {
 		},
 	}
 
+	// ----- Command Group -----
+	cmd.GroupID = "analysis"
+
 	// ----- Flags -----
 	cmd.Flags().StringSlice("only", []string{}, "Only run rules from specific categories (comma-separated)")
 	cmd.Flags().StringSlice("except", []string{}, "Skip rules from specific categories (comma-separated)")

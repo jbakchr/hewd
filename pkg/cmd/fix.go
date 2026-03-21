@@ -76,6 +76,9 @@ func newFixCmd() *cobra.Command {
 		},
 	}
 
+	// Command group
+	cmd.GroupID = "maintenance"
+
 	// Flags
 	cmd.Flags().BoolVar(&apply, "apply", false, "Apply fixes and write new files to disk (default: dry-run)")
 
