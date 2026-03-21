@@ -2,61 +2,95 @@ package cmd
 
 import (
 	"fmt"
+	"sort"
 
+	"github.com/jbakchr/hewd/internal/cliutils"
 	"github.com/jbakchr/hewd/internal/scan"
 )
 
-func printScanSummary(s *scan.Summary) {
-	fmt.Println("Project Summary:")
-	fmt.Printf("  Files:       %d\n", s.Files)
-	fmt.Printf("  Directories: %d\n", s.Directories)
+func printScanSummary(sum *scan.Summary) {
 
-	fmt.Println()
-	fmt.Println("Languages detected:")
-	if len(s.Languages) == 0 {
-		fmt.Println("  (none detected)")
+	// ===== HEADER =====
+	fmt.Printf("%s===== SCAN SUMMARY =====%s\n", cliutils.CyanBold, cliutils.Reset)
+
+	// Basic stats
+	fmt.Printf("%sFiles:%s        %d\n", cliutils.WhiteBold, cliutils.Reset, sum.Files)
+	fmt.Printf("%sDirectories:%s %d\n\n", cliutils.WhiteBold, cliutils.Reset, sum.Directories)
+
+	// ===== LANGUAGES =====
+	fmt.Printf("%s===== LANGUAGES =====%s\n", cliutils.CyanBold, cliutils.Reset)
+	if len(sum.Languages) == 0 {
+		fmt.Println("  (none)")
 	} else {
-		for lang, count := range s.Languages {
-			fmt.Printf("  %s (%d files)\n", lang, count)
+		langs := make([]string, 0, len(sum.Languages))
+		for lang := range sum.Languages {
+			langs = append(langs, lang)
 		}
+		sort.Strings(langs)
+		for _, lang := range langs {
+			fmt.Printf("  - %s (%d files)\n", lang, sum.Languages[lang])
+		}
+		fmt.Println()
 	}
 
-	fmt.Println()
-	fmt.Println("Documentation presence:")
-	for doc, exists := range s.Documentation {
-		if exists {
-			fmt.Printf("  %s: present\n", doc)
-		} else {
-			fmt.Printf("  %s: missing\n", doc)
+	// ===== DOCUMENTATION =====
+	fmt.Printf("%s===== DOCUMENTATION =====%s\n", cliutils.CyanBold, cliutils.Reset)
+	if len(sum.Documentation) == 0 {
+		fmt.Println("  (none)")
+	} else {
+		// Sorted by filename
+		files := make([]string, 0, len(sum.Documentation))
+		for doc := range sum.Documentation {
+			files = append(files, doc)
 		}
+		sort.Strings(files)
+		for _, file := range files {
+			state := "missing"
+			if sum.Documentation[file] {
+				state = "present"
+			}
+			fmt.Printf("  - %s: %s\n", file, state)
+		}
+		fmt.Println()
 	}
 
-	fmt.Println()
-	fmt.Println("Documentation files (detailed):")
-	if len(s.DocsFound) == 0 {
-		fmt.Println("  (none found)")
+	// ===== DOCUMENTATION FILES FOUND =====
+	fmt.Printf("%s===== DOCUMENTATION FILES =====%s\n", cliutils.CyanBold, cliutils.Reset)
+	if len(sum.DocsFound) == 0 {
+		fmt.Println("  (none)")
 	} else {
-		for docType, files := range s.DocsFound {
-			fmt.Printf("  %s:\n", docType)
-			for _, file := range files {
-				fmt.Printf("    - %s\n", file)
+		types := make([]string, 0, len(sum.DocsFound))
+		for t := range sum.DocsFound {
+			types = append(types, t)
+		}
+		sort.Strings(types)
+
+		for _, t := range types {
+			fmt.Printf("  %s:\n", t)
+			for _, path := range sum.DocsFound[t] {
+				fmt.Printf("    - %s\n", path)
 			}
 		}
+		fmt.Println()
 	}
 
-	fmt.Println()
-	fmt.Println("Configuration files:")
-	if len(s.ConfigFiles) == 0 {
-		fmt.Println("  (none found)")
+	// ===== CONFIG FILES =====
+	fmt.Printf("%s===== CONFIG FILES =====%s\n", cliutils.CyanBold, cliutils.Reset)
+	if len(sum.ConfigFiles) == 0 {
+		fmt.Println("  (none)")
 	} else {
-		for cfgType, files := range s.ConfigFiles {
-			fmt.Printf("  %s:\n", cfgType)
-			for _, file := range files {
-				fmt.Printf("    - %s\n", file)
+		types := make([]string, 0, len(sum.ConfigFiles))
+		for t := range sum.ConfigFiles {
+			types = append(types, t)
+		}
+		sort.Strings(types)
+
+		for _, t := range types {
+			fmt.Printf("  %s:\n", t)
+			for _, path := range sum.ConfigFiles[t] {
+				fmt.Printf("    - %s\n", path)
 			}
 		}
+		fmt.Println()
 	}
-
-	fmt.Println()
-	fmt.Println("Scan complete.")
 }

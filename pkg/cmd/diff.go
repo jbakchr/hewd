@@ -114,7 +114,7 @@ func newDiffCmd() *cobra.Command {
 			// --------------------------------------
 			// DEFAULT PRETTY OUTPUT
 			// --------------------------------------
-			return writePrettyDiff(result, oldReport, newReport)
+			return writePrettyDiff(result)
 		},
 	}
 
