@@ -1,25 +1,3 @@
-# 📘 **Updated README.md (fully aligned with roadmap & Phase 1E)**
-
-Below is your complete, ready-to-paste replacement for `README.md`.
-
-It reflects:
-
-- All completed Phase 1A–1E work
-- Harmonized helptexts
-- Polished pretty output
-- Standardized error system
-- Current status (about to enter Phase 2: Release Engineering)
-- Accurate and consistent command examples
-- Clean structure and professional style
-- GitHub-friendly formatting
-
----
-
-# 📘 **README.md**
-
-_(Drop‑in replacement)_
-
-````markdown
 # 📘 hewd — Project Health, Documentation & Structure Toolkit
 
 `hewd` is a fast, dependency‑free CLI for analyzing, comparing, and improving the overall health of software repositories.  
@@ -56,6 +34,7 @@ cd hewd
 go build -o hewd ./cmd/hewd
 sudo mv hewd /usr/local/bin/hewd
 ```
+
 ````
 
 ---
@@ -232,11 +211,11 @@ Located in `docs/`:
 
 ## 🏗 Project Roadmap
 
-See the full roadmap:  
+See the full roadmap:
 👉 `docs/roadmap.md`
 
-**Current status:**  
-`hewd` has completed Phases **1A through 1D**, and Phase **1E** is actively being implemented.  
+**Current status:**
+`hewd` has completed Phases **1A through 1D**, and Phase **1E** is actively being implemented.
 After Phase 1E is complete, work begins on **Phase 2 — v0.1.0 Release Engineering**.
 
 ---
@@ -270,3 +249,4 @@ This version reflects:
 - Modern CLI UX
 
 ```
+````
