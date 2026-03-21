@@ -1,18 +1,22 @@
 package scan
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/jbakchr/hewd/internal/cliutils"
 	"github.com/jbakchr/hewd/internal/config"
 )
 
 // ScanDirectory walks the project directory and builds a Summary.
 // It respects include/exclude lists from .hewd/config.yaml.
 func ScanDirectory(root string) (*Summary, error) {
-	cfg, _ := config.Load(root)
+	cfg, cfgErr := config.Load(root)
+	if cfgErr != nil {
+		// Config errors are already structured by the config package.
+		return nil, cfgErr
+	}
 
 	s := &Summary{
 		Languages:     make(map[string]int),
@@ -29,14 +33,19 @@ func ScanDirectory(root string) (*Summary, error) {
 	includes := normalizePaths(cfg.Scan.Include)
 	excludes := normalizePaths(cfg.Scan.Exclude)
 
-	err := filepath.Walk(root, func(path string, info os.FileInfo, walkErr error) error {
+	// Walk the repo
+	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, walkErr error) error {
 		if walkErr != nil {
-			return walkErr
+			// We wrap this in a structured error so the user knows what failed.
+			return cliutils.ErrHint(
+				"failed to walk project directory",
+				"check file permissions or exclude problematic paths using the config file",
+			)
 		}
 
-		rel, err := filepath.Rel(root, path)
-		if err != nil {
-			return err
+		rel, relErr := filepath.Rel(root, path)
+		if relErr != nil {
+			return cliutils.Err("failed to compute relative path")
 		}
 		rel = filepath.ToSlash(rel)
 
@@ -44,9 +53,9 @@ func ScanDirectory(root string) (*Summary, error) {
 			return nil
 		}
 
-		// Always exclude .hewd
+		// Always exclude .hewd/
 		if strings.HasPrefix(rel, ".hewd/") {
-			if info.IsDir() {
+			if entry.IsDir() {
 				return filepath.SkipDir
 			}
 			return nil
@@ -54,7 +63,7 @@ func ScanDirectory(root string) (*Summary, error) {
 
 		// Exclusion rule
 		if shouldExclude(rel, excludes) {
-			if info.IsDir() {
+			if entry.IsDir() {
 				return filepath.SkipDir
 			}
 			return nil
@@ -65,15 +74,16 @@ func ScanDirectory(root string) (*Summary, error) {
 			return nil
 		}
 
-		if info.IsDir() {
+		// Directory count
+		if entry.IsDir() {
 			s.Directories++
 			return nil
 		}
 
-		// It's a file — count it
+		// File count
 		s.Files++
 
-		name := info.Name()
+		name := entry.Name()
 
 		// Documentation detection
 		if docType, ok := DocumentationAssets[name]; ok {
@@ -99,7 +109,16 @@ func ScanDirectory(root string) (*Summary, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("error scanning directory: %w", err)
+		// Errors returned from WalkDir callbacks are already structured,
+		// but if WalkDir itself returns something unexpected, wrap it here.
+		if he, ok := err.(cliutils.HewdError); ok {
+			return nil, he
+		}
+
+		return nil, cliutils.ErrHint(
+			"failed to scan project directory",
+			"ensure all paths are readable or adjust include/exclude lists in .hewd/config.yaml",
+		)
 	}
 
 	return s, nil
