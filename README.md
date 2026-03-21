@@ -1,24 +1,26 @@
 # 📘 hewd — Project Health, Documentation & Structure Toolkit
 
-`hewd` is a fast, dependency‑free CLI for analyzing, comparing, and improving the overall health of software repositories.  
-It evaluates documentation, configuration, and structural conventions, produces machine‑readable reports, highlights regressions, and can automatically generate missing project files.
+`hewd` is a fast, dependency‑free CLI for analyzing, comparing, and improving the overall health of software repositories.
+
+It evaluates documentation, configuration, and structural conventions, produces machine‑readable reports, highlights regressions, and can automatically generate missing project files.  
+It also integrates with GitHub Actions for CI‑driven health checks.
 
 ---
 
 ## ✨ Features
 
 - 🔍 **Scan** repositories for documentation, configuration, structure, and metadata
-- 🩺 **Run diagnostics** via `hewd doctor`
+- 🩺 **Run diagnostics** with `hewd doctor`
 - 🧮 **Score** documentation, configuration, and structure
-- 🔁 **Compare reports** using `hewd diff` (score deltas, new/resolved issues)
+- 🔁 **Compare reports** via `hewd diff` (score deltas, new/resolved issues)
 - 🚨 **Regression gating** for CI pipelines
 - 🧾 **Machine‑readable JSON/YAML output**
 - 📝 **Markdown reports** for GitHub PR comments
 - 🧰 **Auto‑fix** missing documentation and CI files
-- 🏷️ **SVG badge generator**
+- 🏷️ **SVG badge generation**
 - 🤖 **GitHub Action** with PR comment updating
-- 🎨 **Pretty‑printed terminal output** with severity icons and color
-- ❗ **Standardized error system** with hints and clean formatting
+- 🎨 **Pretty‑printed output** with severity icons and color
+- ❗ **Structured error system** with consistent messages and actionable hints
 
 Full documentation lives in the `docs/` directory.
 
@@ -51,14 +53,14 @@ hewd scan --pretty
 hewd doctor
 ```
 
-Pretty output will highlight:
+Pretty output includes:
 
-- score
+- overall score
 - category scores
 - issues with severity icons
 - fixable items
 
-Generate a Markdown report:
+Generate Markdown:
 
 ```bash
 hewd doctor --md > health.md
@@ -98,15 +100,15 @@ Markdown diff for PR comments:
 hewd diff old.json new.json --md > diff.md
 ```
 
-Supports pretty, JSON, YAML, and Markdown output modes.
+Supports pretty, JSON, YAML, and Markdown output.
 
 ---
 
 ## 🧰 Auto‑Fix Missing Files
 
 ```bash
-hewd fix                  # dry-run
-hewd fix --apply          # write new files
+hewd fix        # dry-run
+hewd fix --apply  # write new files
 ```
 
 Creates:
@@ -117,7 +119,7 @@ Creates:
 - docs/ directory
 - CI workflow templates
 
-More fixers coming in future releases.
+(and more in future versions)
 
 ---
 
@@ -127,17 +129,17 @@ More fixers coming in future releases.
 hewd badge --output badge.svg
 ```
 
-Useful for READMEs, dashboards, and CI artifacts.
+Ideal for READMEs, dashboards, or CI artifacts.
 
 ---
 
 ## 🤖 GitHub Action
 
-hewd includes a first‑class GitHub Action enabling:
+hewd ships with a first‑class GitHub Action enabling:
 
 - PR comments (`hewd diff --md`)
 - regression gating
-- machine‑readable artifacts
+- machine‑readable report uploads
 
 Minimal usage:
 
@@ -162,33 +164,33 @@ hewd uses:
 
 - cyan headers
 - GitHub‑style severity icons (`ℹ️`, `⚠️`, `❌`)
-- colorized score deltas (`↑`, `↓`)
+- colorized deltas (`⬆️`, `⬇️`)
 - consistent section formatting
 
 Example:
 
     ===== OVERALL SCORE =====
-     85 / 100
+    85 / 100
 
     ===== DOCUMENTATION ISSUES =====
-      ⚠️  DOC_LICENSE_MISSING — LICENSE file is missing
-      ℹ️  DOC_README_STALE    — README.md may be outdated
+    ⚠️ DOC_LICENSE_MISSING — LICENSE file is missing
+    ℹ️ DOC_README_STALE — README.md may be outdated
 
 ---
 
-## ❗ Standardized Error System
+## ❗ Structured Error System (Phase 1E — Fully Completed)
 
-hewd uses a consistent, helpful error style:
+hewd provides clean, consistent error messages:
 
     error: cannot combine --json and --yaml
     hint: use only one machine-readable format at a time
 
-Top-level errors include the invoked command:
+Command-level errors are prefixed:
 
     error (hewd doctor): failed to read config
     hint: ensure .hewd/config.yaml is valid yaml
 
-All internal commands use structured `HewdError` values.
+Internal code uses structured `HewdError` values everywhere.
 
 ---
 
@@ -213,8 +215,8 @@ See the full roadmap:
 👉 `docs/roadmap.md`
 
 **Current status:**
-`hewd` has completed Phases **1A through 1D**, and Phase **1E** is actively being implemented.
-After Phase 1E is complete, work begins on **Phase 2 — v0.1.0 Release Engineering**.
+✔ Phase 1 (A–E) is fully complete
+➡ Starting Phase 2 — _v0.1.0 Release Preparation_
 
 ---
 
@@ -229,22 +231,4 @@ To be determined.
 - Source: <https://github.com/jbakchr/hewd>
 - Issues: <https://github.com/jbakchr/hewd/issues>
 - Releases: <https://github.com/jbakchr/hewd/releases>
-
-```
-
----
-
-# 🎉 README.md is now fully updated and aligned
-This version reflects:
-
-- Your exact project state
-- Phase 1E progress
-- Error system rewrite
-- Pretty output redesign
-- Command grouping
-- Unified flags
-- Clean, professional tone
-- Modern CLI UX
-
-
-```
+````
