@@ -1,35 +1,73 @@
 package cliutils
 
-import "fmt"
-
-// ValidateOutputFormatFlags enforces universal output flag rules:
+// ValidateOutputFormatFlags enforces universal output-format flag rules.
 //
-// - Only one of: --json, --yaml, --md
-// - --pretty applies only to JSON
-// - Returns an error if flags are in conflict
+// Rules:
+//   - only one of --json, --yaml, or --md may be active
+//   - --pretty applies only to --json
+//   - every violation produces a HewdError with an actionable hint
 //
-// Pass boolean values for each flag and the name of the command
-// (used for clearer error messages).
-func ValidateOutputFormatFlags(jsonOut, yamlOut, mdOut, pretty bool, commandName string) error {
+// Parameters:
+//
+//	jsonOut  = flag status
+//	yamlOut  = flag status
+//	mdOut    = flag status
+//	pretty   = flag status
+//	cmdName  = the subcommand invoking validation (e.g., "scan", "doctor")
+//
+// Returns HewdError if the flags are invalid.
+func ValidateOutputFormatFlags(jsonOut, yamlOut, mdOut, pretty bool, cmdName string) error {
 
-	// Only one machine format at a time
+	// -------------------------------------------------------------------------
+	// Mutually exclusive: --json AND --yaml
+	// -------------------------------------------------------------------------
 	if jsonOut && yamlOut {
-		return fmt.Errorf("%s: cannot combine --json and --yaml", commandName)
+		return ErrHint(
+			"cannot combine --json and --yaml",
+			"use only one machine-readable format at a time",
+		)
 	}
+
+	// -------------------------------------------------------------------------
+	// Mutually exclusive: --json AND --md
+	// -------------------------------------------------------------------------
 	if jsonOut && mdOut {
-		return fmt.Errorf("%s: cannot combine --json and --md", commandName)
+		return ErrHint(
+			"cannot combine --json and --md",
+			"use only one machine-readable format at a time",
+		)
 	}
+
+	// -------------------------------------------------------------------------
+	// Mutually exclusive: --yaml AND --md
+	// -------------------------------------------------------------------------
 	if yamlOut && mdOut {
-		return fmt.Errorf("%s: cannot combine --yaml and --md", commandName)
+		return ErrHint(
+			"cannot combine --yaml and --md",
+			"use only one machine-readable format at a time",
+		)
 	}
 
-	// Pretty only applies to JSON
+	// -------------------------------------------------------------------------
+	// pretty + yaml is invalid
+	// -------------------------------------------------------------------------
 	if pretty && yamlOut {
-		return fmt.Errorf("%s: cannot combine --yaml and --pretty (pretty applies only to JSON)", commandName)
-	}
-	if pretty && mdOut {
-		return fmt.Errorf("%s: cannot combine --md and --pretty (pretty applies only to JSON)", commandName)
+		return ErrHint(
+			"cannot combine --yaml and --pretty",
+			"the --pretty flag only applies to JSON output",
+		)
 	}
 
+	// -------------------------------------------------------------------------
+	// pretty + md is invalid
+	// -------------------------------------------------------------------------
+	if pretty && mdOut {
+		return ErrHint(
+			"cannot combine --md and --pretty",
+			"the --pretty flag only applies to JSON output",
+		)
+	}
+
+	// If no conflicts were found:
 	return nil
 }
