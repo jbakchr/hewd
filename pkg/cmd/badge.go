@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jbakchr/hewd/internal/badge"
+	"github.com/jbakchr/hewd/internal/cliutils"
 	"github.com/jbakchr/hewd/internal/config"
 	"github.com/jbakchr/hewd/internal/helptext"
 	"github.com/jbakchr/hewd/internal/rules"
@@ -26,44 +27,67 @@ func newBadgeCmd() *cobra.Command {
 
 		RunE: func(cmd *cobra.Command, args []string) error {
 
+			// require an output file
 			if output == "" {
-				return fmt.Errorf("--output is required (example: --output badge.svg)")
+				return cliutils.ErrHint(
+					"--output is required",
+					"example: hewd badge --output badge.svg",
+				)
 			}
 
-			// Ensure output directory exists
-			outDir := filepath.Dir(output)
-			if outDir != "." && outDir != "" {
-				if err := os.MkdirAll(outDir, 0755); err != nil {
-					return fmt.Errorf("failed to create output directory %s: %w", outDir, err)
+			// ensure the parent directory exists
+			dir := filepath.Dir(output)
+			if dir != "." {
+				if err := os.MkdirAll(dir, 0755); err != nil {
+					return cliutils.ErrHint(
+						fmt.Sprintf("failed to create directory %s: %v", dir, err),
+						"ensure you have write permissions for the target path",
+					)
 				}
 			}
 
-			// Determine working directory
+			// determine working directory
 			cwd, err := os.Getwd()
 			if err != nil {
-				return fmt.Errorf("could not determine working directory: %w", err)
+				return cliutils.ErrHint(
+					fmt.Sprintf("failed to determine working directory: %v", err),
+					"ensure the current directory is accessible",
+				)
 			}
 
-			cfg, _ := config.Load(cwd)
+			// load config
+			cfg, err := config.Load(cwd)
+			if err != nil {
+				return cliutils.ErrHint(
+					fmt.Sprintf("failed to load configuration: %v", err),
+					"ensure .hewd/config.yaml is valid yaml and readable",
+				)
+			}
 
-			// Scan project
+			// scan repository
 			summary, err := scan.ScanDirectory(cwd)
 			if err != nil {
-				return err
+				return cliutils.ErrHint(
+					fmt.Sprintf("failed to scan directory: %v", err),
+					"ensure you are running hewd inside a valid repository",
+				)
 			}
 
-			// Run rule engine
+			// run all rules
 			results := rules.RunAll(summary, cfg, nil, nil)
 
-			// Compute overall score
-			totalScore := score.Score(results, cfg)
+			// compute score
+			overallScore := score.Score(results, cfg)
 
-			// Generate badge SVG
-			svg := badge.Generate(totalScore)
+			// generate badge SVG
+			svg := badge.Generate(overallScore)
 
-			// Write output file
+			// write to file
 			if err := os.WriteFile(output, []byte(svg), 0644); err != nil {
-				return fmt.Errorf("failed to write badge to %s: %w", output, err)
+				return cliutils.ErrHint(
+					fmt.Sprintf("failed to write file %s: %v", output, err),
+					"ensure directory permissions allow writing",
+				)
 			}
 
 			fmt.Printf("Badge generated → %s\n", output)
@@ -73,12 +97,12 @@ func newBadgeCmd() *cobra.Command {
 
 	cmd.GroupID = "reporting"
 
-	// Output flag
-	cmd.Flags().StringVar(&output, "output", "", "Write the generated SVG badge to the specified file path (required).")
-
-	// Future optional metadata export:
-	// cmd.Flags().Bool("json", false, "Output badge metadata in JSON format.")
-	// cmd.Flags().Bool("yaml", false, "Output badge metadata in YAML format.")
+	cmd.Flags().StringVar(
+		&output,
+		"output",
+		"",
+		"Write the generated SVG badge to the specified file path (required).",
+	)
 
 	return cmd
 }
