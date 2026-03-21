@@ -2,71 +2,100 @@ package cmd
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
-	"github.com/jbakchr/hewd/internal/api"
+	"github.com/jbakchr/hewd/internal/cliutils"
 	"github.com/jbakchr/hewd/internal/diff"
+	"github.com/jbakchr/hewd/internal/rules"
+	"github.com/jbakchr/hewd/internal/score"
 )
 
-func writePrettyDiff(result diff.DiffResult, old api.MachineOutput, new api.MachineOutput) error {
+func writePrettyDiff(d diff.DiffResult) error {
 
-	groupedNew := diff.GroupIssues(result.NewIssues)
-	groupedResolved := diff.GroupIssues(result.ResolvedIssues)
+	// ===== OVERALL SCORE =====
+	fmt.Printf("%s===== OVERALL SCORE =====%s\n", cliutils.CyanBold, cliutils.Reset)
+	fmt.Printf("  Change: %s\n\n", trendVisual(d.ScoreDelta))
 
-	fmt.Println("\n===== OVERALL SCORE =====")
-	fmt.Println("----------------------------------------")
-	fmt.Printf("Old report score: %d\n", old.Score)
-	fmt.Printf("New report score: %d\n", new.Score)
-	fmt.Printf("Score change: %+d\n", result.ScoreDelta)
-
-	fmt.Println("\n===== CATEGORY SCORES =====")
-	fmt.Println("----------------------------------------")
-
-	fmt.Printf("  %-14s %3d → %3d   (%+d)\n",
-		"Documentation:",
-		old.CategoryScores.Documentation,
-		new.CategoryScores.Documentation,
-		result.CategoryDeltas["documentation"],
-	)
-
-	fmt.Printf("  %-14s %3d → %3d   (%+d)\n",
-		"Config:",
-		old.CategoryScores.Config,
-		new.CategoryScores.Config,
-		result.CategoryDeltas["config"],
-	)
-
-	fmt.Printf("  %-14s %3d → %3d   (%+d)\n",
-		"Structure:",
-		old.CategoryScores.Structure,
-		new.CategoryScores.Structure,
-		result.CategoryDeltas["structure"],
-	)
-
-	fmt.Println("\n===== NEW ISSUES =====")
-	fmt.Println("----------------------------------------")
-	if len(result.NewIssues) == 0 {
-		fmt.Println("(none)")
+	// ===== CATEGORY SCORE DELTAS =====
+	fmt.Printf("%s===== CATEGORY SCORE DELTAS =====%s\n", cliutils.CyanBold, cliutils.Reset)
+	if len(d.CategoryDeltas) == 0 {
+		fmt.Println("  (none)")
 	} else {
-		for category, issues := range groupedNew {
-			fmt.Printf("\n## %s\n", category)
-			for _, issue := range issues {
-				fmt.Printf("  - %s (%s)\n", issue.ID, issue.Level)
-			}
+		cats := make([]string, 0, len(d.CategoryDeltas))
+		for k := range d.CategoryDeltas {
+			cats = append(cats, k)
 		}
+		sort.Strings(cats)
+
+		for _, cat := range cats {
+			delta := d.CategoryDeltas[cat]
+			fmt.Printf("  %s: %s\n",
+				uppercase(cat),
+				trendVisual(delta),
+			)
+		}
+		fmt.Println()
 	}
 
-	fmt.Println("\n===== RESOLVED ISSUES =====")
-	fmt.Println("----------------------------------------")
-	if len(result.ResolvedIssues) == 0 {
-		fmt.Println("(none)")
+	// ===== NEW ISSUES =====
+	fmt.Printf("%s===== NEW ISSUES =====%s\n", cliutils.CyanBold, cliutils.Reset)
+	if len(d.NewIssues) == 0 {
+		fmt.Println("  (none)")
 	} else {
-		for category, issues := range groupedResolved {
-			fmt.Printf("\n## %s\n", category)
-			for _, issue := range issues {
-				fmt.Printf("  - %s (%s)\n", issue.ID, issue.Level)
-			}
-		}
+		printIssues(d.NewIssues)
+		fmt.Println()
+	}
+
+	// ===== RESOLVED ISSUES =====
+	fmt.Printf("%s===== RESOLVED ISSUES =====%s\n", cliutils.CyanBold, cliutils.Reset)
+	if len(d.ResolvedIssues) == 0 {
+		fmt.Println("  (none)")
+	} else {
+		printIssues(d.ResolvedIssues)
+		fmt.Println()
 	}
 
 	return nil
+}
+
+// Shared issue printer for new/resolved issues
+func printIssues(list []score.ScoredRule) {
+	for _, r := range list {
+		icon, color := cliutils.SeverityVisual(r.Level)
+		cat := rules.CategoryForRule(r.ID)
+
+		fileSuffix := ""
+		if r.File != "" {
+			fileSuffix = fmt.Sprintf(" (%s)", r.File)
+		}
+
+		fmt.Printf("  %s%s%s  [%s] %s — %s%s\n",
+			color, icon, cliutils.Reset,
+			cat,
+			r.ID,
+			r.Message,
+			fileSuffix,
+		)
+	}
+}
+
+// Colorized trend visual
+func trendVisual(n int) string {
+	switch {
+	case n > 0:
+		return fmt.Sprintf("%s+%d ↑%s", cliutils.Green, n, cliutils.Reset)
+	case n < 0:
+		return fmt.Sprintf("%s%d ↓%s", cliutils.Red, n, cliutils.Reset)
+	default:
+		return fmt.Sprintf("%s0%s", cliutils.WhiteBold, cliutils.Reset)
+	}
+}
+
+// Uppercase first letter
+func uppercase(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
 }

@@ -2,36 +2,75 @@ package cmd
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
+	"github.com/jbakchr/hewd/internal/cliutils"
 	"github.com/jbakchr/hewd/internal/rules"
 )
 
-//
-// Pretty Output (grouped by category)
-//
-
 func printDoctorPretty(results []rules.Result) {
-	if len(results) == 0 {
-		fmt.Println("No issues found. Project looks healthy!")
-		return
-	}
 
-	fmt.Println("Doctor Results by Category:")
-
+	// Group results by category USING Option C
 	grouped := map[string][]rules.Result{}
 	for _, r := range results {
 		cat := rules.CategoryForRule(r.ID)
 		grouped[cat] = append(grouped[cat], r)
 	}
 
-	for cat, list := range grouped {
-		fmt.Printf("\n[%s]\n", strings.ToUpper(cat))
-		for _, r := range list {
-			fmt.Printf("  [%s] %s: %s\n", r.Level, r.ID, r.Message)
-			if r.File != "" {
-				fmt.Printf("    File: %s\n", r.File)
-			}
+	// Stable category display ordering
+	orderedCats := []string{"documentation", "config", "structure"}
+	// Add any custom categories registered later
+	for cat := range grouped {
+		if !contains(orderedCats, cat) {
+			orderedCats = append(orderedCats, cat)
 		}
 	}
+
+	for _, cat := range orderedCats {
+
+		fmt.Printf("%s===== %s ISSUES =====%s\n",
+			cliutils.CyanBold,
+			strings.ToUpper(cat),
+			cliutils.Reset)
+
+		issues := grouped[cat]
+
+		if len(issues) == 0 {
+			fmt.Println("  (none)")
+			continue
+		}
+
+		// Sort: errors first, warnings next, then info
+		sort.Slice(issues, func(i, j int) bool {
+			return rules.SeverityRank(issues[i].Level) > rules.SeverityRank(issues[j].Level)
+		})
+
+		for _, r := range issues {
+			icon, color := cliutils.SeverityVisual(r.Level)
+
+			fileSuffix := ""
+			if r.File != "" {
+				fileSuffix = fmt.Sprintf(" (%s)", r.File)
+			}
+
+			fmt.Printf("  %s%s%s  %s%s%s — %s%s\n",
+				color, icon, cliutils.Reset,
+				cliutils.Bold, r.ID, cliutils.Reset,
+				r.Message,
+				fileSuffix,
+			)
+		}
+
+		fmt.Println()
+	}
+}
+
+func contains(list []string, value string) bool {
+	for _, v := range list {
+		if v == value {
+			return true
+		}
+	}
+	return false
 }
