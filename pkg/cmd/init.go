@@ -5,8 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jbakchr/hewd/internal/helptext"
 	"github.com/spf13/cobra"
+
+	"github.com/jbakchr/hewd/internal/helptext"
 )
 
 func newInitCmd() *cobra.Command {
@@ -17,12 +18,13 @@ func newInitCmd() *cobra.Command {
 		Short:   helptext.InitShort,
 		Long:    helptext.InitLong,
 		Example: helptext.InitExample,
+
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cfgDir := filepath.Join(".", ".hewd")
 			cfgPath := filepath.Join(cfgDir, "config.yaml")
 
-			// Ensure .hewd directory exists
+			// Create .hewd directory if missing
 			if _, err := os.Stat(cfgDir); os.IsNotExist(err) {
 				if err := os.MkdirAll(cfgDir, 0755); err != nil {
 					return fmt.Errorf("failed to create .hewd directory: %w", err)
@@ -30,16 +32,16 @@ func newInitCmd() *cobra.Command {
 				fmt.Println("Created .hewd/ directory")
 			}
 
-			// Check for existing config file
+			// If config already exists and no --force, stop
 			if _, err := os.Stat(cfgPath); err == nil && !force {
 				fmt.Println(".hewd/config.yaml already exists — use --force to overwrite.")
 				return nil
 			}
 
-			// Default template
+			// Default configuration template
 			defaultCfg := `# hewd configuration file
 #
-# This file defines rule behavior, severity overrides, scoring weights, and
+# Defines rule behavior, severity overrides, scoring weights, and
 # include/exclude paths for scans and diagnostics. All fields are optional.
 
 rules: {}
@@ -52,7 +54,7 @@ scan:
     - vendor
 `
 
-			// Write file (with overwrite optional)
+			// Write config to disk
 			if err := os.WriteFile(cfgPath, []byte(defaultCfg), 0644); err != nil {
 				return fmt.Errorf("failed to write config.yaml: %w", err)
 			}
@@ -67,11 +69,14 @@ scan:
 		},
 	}
 
-	// Command group
 	cmd.GroupID = "maintenance"
 
-	// Flags
-	cmd.Flags().BoolVar(&force, "force", false, "Overwrite existing .hewd/config.yaml if it already exists.")
+	cmd.Flags().BoolVar(
+		&force,
+		"force",
+		false,
+		"Overwrite existing .hewd/config.yaml if it already exists.",
+	)
 
 	return cmd
 }

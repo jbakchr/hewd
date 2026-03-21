@@ -21,6 +21,7 @@ func newFixCmd() *cobra.Command {
 		Short:   helptext.FixShort,
 		Long:    helptext.FixLong,
 		Example: helptext.FixExample,
+
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// Load working directory
@@ -29,7 +30,6 @@ func newFixCmd() *cobra.Command {
 				return fmt.Errorf("could not determine working directory: %w", err)
 			}
 
-			// Load config (optional)
 			cfg, _ := config.Load(cwd)
 
 			// Scan project
@@ -50,7 +50,7 @@ func newFixCmd() *cobra.Command {
 			}
 
 			// -------------------------
-			// DRY RUN MODE
+			// DRY-RUN (default)
 			// -------------------------
 			if !apply {
 				fmt.Println("Fixable issues:")
@@ -76,10 +76,8 @@ func newFixCmd() *cobra.Command {
 		},
 	}
 
-	// Command group
 	cmd.GroupID = "maintenance"
 
-	// Flags
 	cmd.Flags().BoolVar(&apply, "apply", false, "Apply fixes and write new files to disk (default is dry-run).")
 
 	return cmd

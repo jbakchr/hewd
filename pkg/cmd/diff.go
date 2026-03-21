@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jbakchr/hewd/internal/api"
+	"github.com/jbakchr/hewd/internal/cliutils"
 	"github.com/jbakchr/hewd/internal/diff"
 	"github.com/jbakchr/hewd/internal/helptext"
 )
@@ -19,32 +20,34 @@ func newDiffCmd() *cobra.Command {
 		Long:    helptext.DiffLong,
 		Example: helptext.DiffExample,
 		Args:    cobra.ExactArgs(2),
+
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// --------------------------------------
 			// Flags
 			// --------------------------------------
-			jsonFlag, _ := cmd.Flags().GetBool("json")
-			yamlFlag, _ := cmd.Flags().GetBool("yaml")
-			mdFlag, _ := cmd.Flags().GetBool("md")
+			jsonOut, _ := cmd.Flags().GetBool("json")
+			yamlOut, _ := cmd.Flags().GetBool("yaml")
+			mdOut, _ := cmd.Flags().GetBool("md")
+			pretty, _ := cmd.Flags().GetBool("pretty")
 
 			failScoreDrop, _ := cmd.Flags().GetInt("fail-on-score-drop")
 			failNewErrors, _ := cmd.Flags().GetBool("fail-on-new-errors")
 			failAny, _ := cmd.Flags().GetBool("fail-on-any-regression")
 
-			// Prevent invalid format combos
-			if (jsonFlag && yamlFlag) ||
-				(jsonFlag && mdFlag) ||
-				(yamlFlag && mdFlag) {
-				return fmt.Errorf("cannot combine --json, --yaml, or --md")
+			// Shared validation
+			if err := cliutils.ValidateOutputFormatFlags(
+				jsonOut, yamlOut, mdOut, pretty, "hewd diff",
+			); err != nil {
+				return err
 			}
 
+			// --------------------------------------
+			// Load reports
+			// --------------------------------------
 			oldPath := args[0]
 			newPath := args[1]
 
-			// --------------------------------------
-			// Load old report
-			// --------------------------------------
 			oldData, err := os.ReadFile(oldPath)
 			if err != nil {
 				return fmt.Errorf("failed to read old report: %w", err)
@@ -55,9 +58,6 @@ func newDiffCmd() *cobra.Command {
 				return fmt.Errorf("failed to parse old report JSON: %w", err)
 			}
 
-			// --------------------------------------
-			// Load new report
-			// --------------------------------------
 			newData, err := os.ReadFile(newPath)
 			if err != nil {
 				return fmt.Errorf("failed to read new report: %w", err)
@@ -85,7 +85,7 @@ func newDiffCmd() *cobra.Command {
 			gate := diff.EvaluateRegressionGates(result, failScoreDrop, failNewErrors, failAny)
 
 			if gate.Failed {
-				if !jsonFlag && !yamlFlag {
+				if !jsonOut && !yamlOut {
 					fmt.Println("\n❌ Regression detected:")
 					for _, r := range gate.Reasons {
 						fmt.Printf(" - %s\n", r)
@@ -94,32 +94,30 @@ func newDiffCmd() *cobra.Command {
 				return fmt.Errorf("regression gating failed")
 			}
 
-			// Machine-readable diff structure
 			out := diff.MakeDiffOutput(result, &oldReport, &newReport)
 
 			// --------------------------------------
-			// JSON / YAML / Markdown outputs
+			// MACHINE OUTPUT
 			// --------------------------------------
-			if jsonFlag {
+			if jsonOut {
 				return diff.WriteJSON(out)
 			}
-			if yamlFlag {
+			if yamlOut {
 				return diff.WriteYAML(out)
 			}
-			if mdFlag {
+			if mdOut {
 				md := diff.WriteMarkdown(result, oldReport, newReport)
 				fmt.Println(md)
 				return nil
 			}
 
 			// --------------------------------------
-			// DEFAULT: Pretty terminal diff
+			// DEFAULT PRETTY OUTPUT
 			// --------------------------------------
 			return writePrettyDiff(result, oldReport, newReport)
 		},
 	}
 
-	// ----- Command Group -----
 	cmd.GroupID = "analysis"
 
 	// --------------------------------------

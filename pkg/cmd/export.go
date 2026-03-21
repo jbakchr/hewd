@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
 	"github.com/jbakchr/hewd/internal/api"
+	"github.com/jbakchr/hewd/internal/cliutils"
 	"github.com/jbakchr/hewd/internal/config"
 	"github.com/jbakchr/hewd/internal/fix"
 	"github.com/jbakchr/hewd/internal/helptext"
@@ -24,6 +26,7 @@ func newExportCmd() *cobra.Command {
 		output     string
 		yamlOut    bool
 		jsonOut    bool
+		mdOut      bool // currently unsupported, but included for consistency/future
 		prettyJSON bool
 	)
 
@@ -32,23 +35,20 @@ func newExportCmd() *cobra.Command {
 		Short:   helptext.ExportShort,
 		Long:    helptext.ExportLong,
 		Example: helptext.ExportExample,
+
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			// ----- Required flag -----
-			if output == "" && !jsonOut && !yamlOut {
+			// If no output file is provided AND stdout formats are not used, error.
+			if output == "" && !jsonOut && !yamlOut && !mdOut {
 				return fmt.Errorf("--output is required unless using --json or --yaml directly to stdout")
 			}
 
-			// ----- Format conflicts -----
-			if jsonOut && yamlOut {
-				return fmt.Errorf("cannot combine --json and --yaml")
+			// Validate JSON/YAML/MD/pretty flags using shared helper
+			if err := cliutils.ValidateOutputFormatFlags(jsonOut, yamlOut, mdOut, prettyJSON, "hewd export"); err != nil {
+				return err
 			}
 
-			if yamlOut && prettyJSON {
-				return fmt.Errorf("cannot combine --yaml and --pretty (pretty applies only to JSON)")
-			}
-
-			// ----- Directory -----
+			// Determine working directory
 			cwd, err := os.Getwd()
 			if err != nil {
 				return fmt.Errorf("could not determine working directory: %w", err)
@@ -56,22 +56,23 @@ func newExportCmd() *cobra.Command {
 
 			cfg, _ := config.Load(cwd)
 
-			// ----- Scan project -----
+			// Scan the repository
 			summary, err := scan.ScanDirectory(cwd)
 			if err != nil {
 				return err
 			}
 
-			// ----- Run all rules -----
+			// Run all rules (export always includes full ruleset)
 			results := rules.RunAll(summary, cfg, nil, nil)
 			scoredRules := score.NewScoredRules(results)
 
 			categoryScores := score.ScoreByCategory(scoredRules, cfg)
 			overallScore := score.Score(results, cfg)
 
-			// ----- Fixable items -----
+			// Fixable items
 			rawFixes := fix.DetectFixes(results, cwd)
 			var fixables []api.FixableItem
+
 			for _, f := range rawFixes {
 				fixables = append(fixables, api.FixableItem{
 					RuleID:   f.RuleID,
@@ -80,7 +81,7 @@ func newExportCmd() *cobra.Command {
 				})
 			}
 
-			// ----- Build machine output -----
+			// Construct machine‑readable output object
 			machine := api.MachineOutput{
 				SchemaVersion:  1,
 				HewdVersion:    version.Version,
@@ -91,7 +92,9 @@ func newExportCmd() *cobra.Command {
 				Fixable:        fixables,
 			}
 
-			// ----- YAML Output -----
+			// ------------------------------
+			// YAML output (stdout or file)
+			// ------------------------------
 			if yamlOut {
 				data, err := yaml.Marshal(machine)
 				if err != nil {
@@ -107,7 +110,9 @@ func newExportCmd() *cobra.Command {
 				return writeExportFile(output, data)
 			}
 
-			// ----- JSON Output -----
+			// ------------------------------
+			// JSON output (stdout or file)
+			// ------------------------------
 			if jsonOut {
 				var data []byte
 				if prettyJSON {
@@ -119,6 +124,7 @@ func newExportCmd() *cobra.Command {
 					return err
 				}
 
+				// stdout
 				if output == "" {
 					fmt.Println(string(data))
 					return nil
@@ -127,7 +133,16 @@ func newExportCmd() *cobra.Command {
 				return writeExportFile(output, data)
 			}
 
-			// ----- Default: JSON to file -----
+			// ------------------------------
+			// Markdown output (future)
+			// ------------------------------
+			if mdOut {
+				return fmt.Errorf("Markdown output is not yet implemented for `hewd export`")
+			}
+
+			// ------------------------------
+			// Default: JSON to file
+			// ------------------------------
 			data, err := json.MarshalIndent(machine, "", "  ")
 			if err != nil {
 				return err
@@ -137,24 +152,32 @@ func newExportCmd() *cobra.Command {
 		},
 	}
 
-	// ----- Command Group -----
 	cmd.GroupID = "reporting"
 
-	// ----- Flags -----
-
-	cmd.Flags().StringVar(&output, "output", "", "Write output to the specified file path (required unless using stdout).")
-
+	// Output flags (consistent ordering)
 	cmd.Flags().BoolVar(&yamlOut, "yaml", false, "Export report in YAML format.")
 	cmd.Flags().BoolVar(&jsonOut, "json", false, "Export report in JSON format. Use --pretty for indented JSON.")
+	cmd.Flags().BoolVar(&mdOut, "md", false, "Export report in Markdown format.") // Optional future support
 	cmd.Flags().BoolVar(&prettyJSON, "pretty", false, "Pretty-print JSON output for readability.")
+
+	// Output path
+	cmd.Flags().StringVar(&output, "output", "", "Write output to the specified file path (required unless using stdout).")
 
 	return cmd
 }
 
 func writeExportFile(path string, data []byte) error {
+	// Ensure parent directories exist
+	if dir := filepath.Dir(path); dir != "." {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return fmt.Errorf("failed to create output directory: %w", err)
+		}
+	}
+
 	if err := os.WriteFile(path, data, 0644); err != nil {
 		return err
 	}
+
 	fmt.Printf("Export complete → %s\n", path)
 	return nil
 }
