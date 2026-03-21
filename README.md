@@ -35,8 +35,6 @@ go build -o hewd ./cmd/hewd
 sudo mv hewd /usr/local/bin/hewd
 ```
 
-````
-
 ---
 
 ## 🔍 Scan your project
@@ -248,5 +246,5 @@ This version reflects:
 - Clean, professional tone
 - Modern CLI UX
 
+
 ```
-````
