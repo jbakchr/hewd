@@ -67,6 +67,9 @@ scan:
 		},
 	}
 
+	// Command group
+	cmd.GroupID = "maintenance"
+
 	// Flags
 	cmd.Flags().BoolVar(&force, "force", false,
 		"Overwrite existing .hewd/config.yaml if it already exists")

@@ -119,6 +119,9 @@ func newDiffCmd() *cobra.Command {
 		},
 	}
 
+	// ----- Command Group -----
+	cmd.GroupID = "analysis"
+
 	// --------------------------------------
 	// Flags
 	// --------------------------------------
