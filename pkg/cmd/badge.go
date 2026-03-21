@@ -75,7 +75,7 @@ func newBadgeCmd() *cobra.Command {
 	cmd.GroupID = "reporting"
 
 	// Flags
-	cmd.Flags().StringVar(&output, "output", "", "Output path for the generated SVG badge (required)")
+	cmd.Flags().StringVar(&output, "output", "", "Write the generated SVG badge to the specified file path (required).")
 
 	return cmd
 }

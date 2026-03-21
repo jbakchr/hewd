@@ -72,9 +72,9 @@ func newScanCmd() *cobra.Command {
 
 	cmd.GroupID = "analysis"
 
-	cmd.Flags().BoolP("json", "j", false, "Output results in JSON format. Use --pretty for indented output.")
-	cmd.Flags().BoolP("yaml", "y", false, "Output results in YAML format.")
-	cmd.Flags().BoolP("pretty", "p", false, "Pretty output for human-readable CLI usage.")
+	cmd.Flags().Bool("json", false, "Output results in JSON format. Use --pretty for indented JSON.")
+	cmd.Flags().Bool("yaml", false, "Output results in YAML format.")
+	cmd.Flags().Bool("pretty", false, "Pretty-print JSON output for readability.")
 
 	return cmd
 }

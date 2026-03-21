@@ -157,17 +157,17 @@ func newDoctorCmd() *cobra.Command {
 	cmd.GroupID = "analysis"
 
 	// ----- Flags -----
-	cmd.Flags().StringSlice("only", []string{}, "Only run rules from specific categories (comma-separated)")
-	cmd.Flags().StringSlice("except", []string{}, "Skip rules from specific categories (comma-separated)")
+	cmd.Flags().StringSlice("only", []string{}, "Only run rules from specific categories (comma-separated).")
+	cmd.Flags().StringSlice("except", []string{}, "Skip rules from specific categories (comma-separated).")
 
 	cmd.Flags().Bool("json", false, "Output the diagnostic report in JSON format. Use --pretty for indented JSON.")
 	cmd.Flags().Bool("yaml", false, "Output the diagnostic report in YAML format.")
 	cmd.Flags().Bool("md", false, "Output the diagnostic report in Markdown format.")
-	cmd.Flags().Bool("pretty", false, "Pretty-print JSON output.")
+	cmd.Flags().Bool("pretty", false, "Pretty-print JSON output for readability.")
 
-	cmd.Flags().String("fail-on", "error", "Fail if a rule of this severity or higher occurs (info|warn|error)")
-	cmd.Flags().Bool("score", false, "Print only the overall score (terminal output only)")
-	cmd.Flags().Bool("category-score", false, "Print only category scores (terminal output only)")
+	cmd.Flags().String("fail-on", "error", "Fail if a rule of this severity or higher occurs (info|warn|error).")
+	cmd.Flags().Bool("score", false, "Print only the overall score (terminal output only).")
+	cmd.Flags().Bool("category-score", false, "Print only category scores (terminal output only).")
 
 	return cmd
 }
