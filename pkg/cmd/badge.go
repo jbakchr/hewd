@@ -23,6 +23,7 @@ func newBadgeCmd() *cobra.Command {
 		Short:   helptext.BadgeShort,
 		Long:    helptext.BadgeLong,
 		Example: helptext.BadgeExample,
+
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			if output == "" {
@@ -43,25 +44,24 @@ func newBadgeCmd() *cobra.Command {
 				return fmt.Errorf("could not determine working directory: %w", err)
 			}
 
-			// Load config (optional)
 			cfg, _ := config.Load(cwd)
 
-			// Scan repository
+			// Scan project
 			summary, err := scan.ScanDirectory(cwd)
 			if err != nil {
 				return err
 			}
 
-			// Run full rule engine
+			// Run rule engine
 			results := rules.RunAll(summary, cfg, nil, nil)
 
-			// Compute score
-			scored := score.Score(results, cfg)
+			// Compute overall score
+			totalScore := score.Score(results, cfg)
 
 			// Generate badge SVG
-			svg := badge.Generate(scored)
+			svg := badge.Generate(totalScore)
 
-			// Write file
+			// Write output file
 			if err := os.WriteFile(output, []byte(svg), 0644); err != nil {
 				return fmt.Errorf("failed to write badge to %s: %w", output, err)
 			}
@@ -71,11 +71,14 @@ func newBadgeCmd() *cobra.Command {
 		},
 	}
 
-	// Command group
 	cmd.GroupID = "reporting"
 
-	// Flags
+	// Output flag
 	cmd.Flags().StringVar(&output, "output", "", "Write the generated SVG badge to the specified file path (required).")
+
+	// Future optional metadata export:
+	// cmd.Flags().Bool("json", false, "Output badge metadata in JSON format.")
+	// cmd.Flags().Bool("yaml", false, "Output badge metadata in YAML format.")
 
 	return cmd
 }

@@ -11,6 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/jbakchr/hewd/internal/api"
+	"github.com/jbakchr/hewd/internal/cliutils"
 	"github.com/jbakchr/hewd/internal/config"
 	"github.com/jbakchr/hewd/internal/fix"
 	"github.com/jbakchr/hewd/internal/helptext"
@@ -26,68 +27,49 @@ func newDoctorCmd() *cobra.Command {
 		Short:   helptext.DoctorShort,
 		Long:    helptext.DoctorLong,
 		Example: helptext.DoctorExample,
+
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			// ----- Directory -----
 			cwd, err := os.Getwd()
 			if err != nil {
 				return fmt.Errorf("could not get working directory: %w", err)
 			}
 
-			// Config (optional)
 			cfg, _ := config.Load(cwd)
 
-			// Repo summary
 			summary, err := scan.ScanDirectory(cwd)
 			if err != nil {
 				return err
 			}
 
-			// ----- Flags -----
+			// Flags
 			onlyCats, _ := cmd.Flags().GetStringSlice("only")
 			exceptCats, _ := cmd.Flags().GetStringSlice("except")
 
 			jsonOut, _ := cmd.Flags().GetBool("json")
 			yamlOut, _ := cmd.Flags().GetBool("yaml")
-			markdownOut, _ := cmd.Flags().GetBool("md")
-			prettyJSON, _ := cmd.Flags().GetBool("pretty")
+			mdOut, _ := cmd.Flags().GetBool("md")
+			pretty, _ := cmd.Flags().GetBool("pretty")
 
+			failOnStr, _ := cmd.Flags().GetString("fail-on")
 			showScore, _ := cmd.Flags().GetBool("score")
 			showCategoryScore, _ := cmd.Flags().GetBool("category-score")
 
-			failOnStr, _ := cmd.Flags().GetString("fail-on")
-
-			// ----- Flag Conflicts -----
-			if (jsonOut && yamlOut) ||
-				(jsonOut && markdownOut) ||
-				(yamlOut && markdownOut) {
-				return fmt.Errorf("cannot combine --json, --yaml, or --md")
+			// Output flag validation
+			if err := cliutils.ValidateOutputFormatFlags(jsonOut, yamlOut, mdOut, pretty, "hewd doctor"); err != nil {
+				return err
 			}
 
-			if yamlOut && prettyJSON {
-				return fmt.Errorf("cannot combine --yaml and --pretty (pretty applies only to JSON)")
-			}
-
-			if markdownOut && prettyJSON {
-				return fmt.Errorf("cannot combine --md and --pretty (pretty applies only to JSON)")
-			}
-
-			// These flags only apply to pretty output
-			if (showScore || showCategoryScore) &&
-				(jsonOut || yamlOut || markdownOut) {
-				return fmt.Errorf("--score and --category-score can only be used with pretty terminal output")
-			}
-
-			// ----- Run Rules -----
+			// Run rules
 			results := rules.RunAll(summary, cfg, onlyCats, exceptCats)
 
-			// Score wrapping
+			// Wrap results
 			scoredRules := score.NewScoredRules(results)
 
 			categoryScores := score.ScoreByCategory(scoredRules, cfg)
 			overallScore := score.Score(results, cfg)
 
-			// Fixable detection
+			// Fixables
 			rawFixes := fix.DetectFixes(results, cwd)
 			var fixables []api.FixableItem
 			for _, f := range rawFixes {
@@ -98,7 +80,7 @@ func newDoctorCmd() *cobra.Command {
 				})
 			}
 
-			// Machine-readable object
+			// Machine-readable output object
 			machine := api.MachineOutput{
 				SchemaVersion:  1,
 				HewdVersion:    version.Version,
@@ -109,17 +91,17 @@ func newDoctorCmd() *cobra.Command {
 				Fixable:        fixables,
 			}
 
-			// ----- Markdown -----
-			if markdownOut {
+			// Markdown
+			if mdOut {
 				md := renderMarkdown(machine)
 				fmt.Println(md)
 				return evaluateDoctorExitCode(results, failOnStr)
 			}
 
-			// ----- JSON -----
+			// JSON
 			if jsonOut {
 				var data []byte
-				if prettyJSON {
+				if pretty {
 					data, _ = json.MarshalIndent(machine, "", "  ")
 				} else {
 					data, _ = json.Marshal(machine)
@@ -128,14 +110,14 @@ func newDoctorCmd() *cobra.Command {
 				return evaluateDoctorExitCode(results, failOnStr)
 			}
 
-			// ----- YAML -----
+			// YAML
 			if yamlOut {
 				data, _ := yaml.Marshal(machine)
 				fmt.Println(string(data))
 				return evaluateDoctorExitCode(results, failOnStr)
 			}
 
-			// ----- Pretty Terminal Output -----
+			// Pretty output
 			if showScore {
 				fmt.Printf("Overall Score: %d/100\n", overallScore)
 			}
@@ -153,10 +135,8 @@ func newDoctorCmd() *cobra.Command {
 		},
 	}
 
-	// ----- Command Group -----
 	cmd.GroupID = "analysis"
 
-	// ----- Flags -----
 	cmd.Flags().StringSlice("only", []string{}, "Only run rules from specific categories (comma-separated).")
 	cmd.Flags().StringSlice("except", []string{}, "Skip rules from specific categories (comma-separated).")
 
