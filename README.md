@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="hewd_banner_logo.png" alt="hewd banner" />
+</p>
+
 # 📘 hewd — Project Health, Documentation & Structure Toolkit
 
 `hewd` is a fast, dependency‑free CLI for analyzing, comparing, and improving the overall health of software repositories.
