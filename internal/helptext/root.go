@@ -8,7 +8,7 @@ const RootShort = "Analyze, score, and improve the health of software repositori
 
 // Tagline shown at the very top of `hewd` output.
 const RootLongTagline = cliutils.CyanBold +
-	"hewd " + cliutils.WhiteBold + "– repository health diagnostics, scoring, and automated fixes" +
+	"hewd " + cliutils.WhiteBoldItalic + "– repository health diagnostics, scoring, and automated fixes" +
 	cliutils.Reset + "\n\n"
 
 // Full description.
