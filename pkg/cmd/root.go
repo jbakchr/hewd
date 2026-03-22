@@ -19,17 +19,17 @@ func NewRootCmd(version string) *cobra.Command {
 	// -------------------------
 	rootCmd.AddGroup(&cobra.Group{
 		ID:    "analysis",
-		Title: "Analysis Commands:",
+		Title: "Analysis Commands:\n",
 	})
 
 	rootCmd.AddGroup(&cobra.Group{
 		ID:    "maintenance",
-		Title: "Maintenance Commands:",
+		Title: "Maintenance Commands:\n",
 	})
 
 	rootCmd.AddGroup(&cobra.Group{
 		ID:    "reporting",
-		Title: "Reporting Commands:",
+		Title: "Reporting Commands:\n",
 	})
 
 	// -------------------------
