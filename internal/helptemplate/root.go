@@ -1,34 +1,36 @@
 package helptemplate
 
-import "github.com/jbakchr/hewd/internal/cliutils"
+import (
+	"github.com/jbakchr/hewd/internal/formatter"
+)
 
-const RootHelpTemplate = `{{with .Long}}{{.}}{{else}}{{.Short}}{{end}}` +
+var RootHelpTemplate = `{{with .Long}}{{.}}{{else}}{{.Short}}{{end}}` +
 
-	cliutils.WhiteBold + "Usage:" + cliutils.Reset + `
+	formatter.WhiteBold("Usage:") + `
   
   {{if .Runnable}}{{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}{{.CommandPath}} [command] [flags]{{end}}` +
 
-	cliutils.Bold + "\n\nExamples: " + cliutils.Reset + `
+	formatter.WhiteBold("\n\nExamples:") + `
 	{{if .HasExample}}{{.Example}}{{end}}` +
 
-	cliutils.WhiteBold + "\nAnalysis Commands:" + cliutils.Reset + `
+	formatter.WhiteBold("\nAnalysis Commands:") + `
 
 {{range .Commands}}{{if eq .GroupID "analysis"}}  {{rpad .Name .NamePadding }} {{.Short}}
 {{end}}{{end}}` +
-	cliutils.WhiteBold + "\nMaintenance Commands:" + cliutils.Reset + `
+	formatter.WhiteBold("\nMaintenance Commands:") + `
 
 {{range .Commands}}{{if eq .GroupID "maintenance"}}  {{rpad .Name .NamePadding }} {{.Short}}
 {{end}}{{end}}` +
-	cliutils.WhiteBold + "\nReporting Commands:" + cliutils.Reset + `
+	formatter.WhiteBold("\nReporting Commands:") + `
 
 {{range .Commands}}{{if eq .GroupID "reporting"}}  {{rpad .Name .NamePadding }} {{.Short}}
 {{end}}{{end}}` +
 
-	cliutils.Bold + "\nAdditional Commands:" + cliutils.Reset + `
+	formatter.WhiteBold("\nAdditional Commands:") + `
 
 {{range .Commands}}{{if not (or (eq .GroupID "analysis") (eq .GroupID "maintenance") (eq .GroupID "reporting"))}}  {{rpad .Name .NamePadding }} {{.Short}}.
 {{end}}{{end}}` +
-	cliutils.Bold + "\nFlags:" + cliutils.Reset + `
+	formatter.WhiteBold("\nFlags:") + `
 
 {{.Flags.FlagUsages}}
 {{if .HasAvailableSubCommands}}{{.CommandPath}} [command] --help for more information about a command.{{end}}
