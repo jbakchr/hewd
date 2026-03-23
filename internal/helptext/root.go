@@ -114,8 +114,6 @@ standards, and track repository maturity over time.
 
 `)
 
-// Typical workflow
-
 // For use in "pkg/cmd/root.go"
 const RootUse = "hewd [command] [flags]"
 
@@ -124,14 +122,12 @@ const RootShort = "Analyze, score, and improve the health of software repositori
 // Full description.
 var RootLong = rootLongHeader + rootLongPurpose + rootLongFeatures + rootLongTypicalWorkflow
 
-var start = formatter.CyanItalic(`(See `)
-var wfc = formatter.CyanItalic(`"Typical workflow"`)
-var end = formatter.CyanItalic(` above for how these commands fit together — all commands shown are safe to run.)`)
-
-var parenthesisClean = start + wfc + end
+// Example typical workflow parenthesis
+var text = `(See "Typical workflow" above for how these commands fit together — all commands shown are safe to run.)`
+var typicalWorkflowParenthesis = formatter.CyanItalic(text)
 
 // Examples shown in `hewd --help`.
-var RootExample = parenthesisClean + `
+var RootExample = typicalWorkflowParenthesis + `
 
   # Scan a repository
   hewd scan
