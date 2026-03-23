@@ -1,45 +1,72 @@
 package helptext
 
 import (
+	"strings"
+
 	"github.com/jbakchr/hewd/internal/formatter"
 )
 
-const RootUse = "hewd [command] [flags]"
+var featuresList = []string{
+	"• Fast, dependency-free repository scanner",
+	"• Curated rules for documentation, structure, and configuration",
+	"• Automated fixes for common issues",
+	"• JSON, YAML, Markdown, and pretty outputs",
+	"• Regression gating for CI pipelines",
+	"• GitHub Action for PR comments",
+	"• SVG badge generation",
+}
 
-const RootShort = "Analyze, score, and improve the health of software repositories."
+// var typicalWorkflowList = []string{
+// 	"Scan the repository",
+// 	"Run full diagnostics to identify issues and compute scores",
+// 	"Export a snapshot of the current health state (before changes)",
+// 	"Apply an improvement discovered from running `hewd doctor`",
+// 	"Export a new snapshot after making improvements",
+// 	"Compare reports using the diff engine",
+// }
 
-var hewdCyan = formatter.Cyan("hewd")
-var hewdCyanBold = formatter.CyanBold("hewd")
+func buildHewdLogo(s string) string {
+	return formatter.CyanBold(s)
+}
 
-// Tagline shown at the very top of `hewd` output.
-var RootTaglineDesc = formatter.WhiteBoldItalic(" – repository health diagnostics, scoring, and automated fixes\n\n")
-var RootLongTagline = hewdCyanBold + RootTaglineDesc
+func buildLogoTagline(s string) string {
+	return formatter.WhiteBoldItalic(s)
+}
 
-// Purpose shown below tagline
-var RootPurpose = hewdCyan + ` analyzes repository health by evaluating documentation, configuration,
-and structural conventions. It provides fast scanning, actionable feedback,
-health scores, diff reports, and automated fixes.
+func buildCyanText(s string) string {
+	return formatter.Cyan(s)
+}
 
-`
+func buildHeader(s string) string {
+	return formatter.WhiteBold(s)
+}
 
-// Features shown below purpose
-var RootFeatures = formatter.WhiteBold("Features:") + `
+func buildFeaturesList(features []string) string {
+	var featuresList strings.Builder
+	featuresList.WriteString(`
+  
+`)
 
-  • Fast, dependency-free repository scanner
-  • Curated rules for documentation, structure, and configuration
-  • Automated fixes for common issues
-  • JSON, YAML, Markdown, and pretty outputs
-  • Regression gating for CI pipelines
-  • GitHub Action for PR comments
-  • SVG badge generation
+	const tab = `  `
 
-Use ` + hewdCyan + ` to maintain consistent documentation, detect regressions, enforce
-standards, and track repository maturity over time.
+	for _, feature := range features {
+		featuresList.WriteString(tab + feature + "\n")
+	}
 
-`
+	return featuresList.String()
+
+}
+
+func buildUseLine(start, name, end string) string {
+	return start + buildCyanText(name) + end
+}
+
+func buildCyanBoldItalicText(s string) string {
+	return formatter.CyanBoldItalic(s)
+}
 
 // Typical workflow
-var RootTypicalWorkflowHeader = formatter.CyanBoldItalic("Typical workflow:")
+var RootTypicalWorkflowHeader = buildCyanBoldItalicText("Typical workflow:")
 
 var ScanRepo = formatter.Blue("1. Scan the repository")
 var DoctorRepo = formatter.Blue("2. Run full diagnostics to identify issues and compute scores")
@@ -48,7 +75,7 @@ var ApplyImprovement = formatter.Blue("4. Apply an improvement discovered from r
 var SecondExport = formatter.Blue("5. Export a new snapshot after making improvements")
 var CompareDiff = formatter.Blue("6. Compare reports using the diff engine")
 
-var RootTypicalWorkflow = RootTypicalWorkflowHeader + `
+var rootLongTypicalWorkflow = RootTypicalWorkflowHeader + `
 
   ` + ScanRepo + `
   hewd scan
@@ -70,8 +97,32 @@ var RootTypicalWorkflow = RootTypicalWorkflowHeader + `
 
 `
 
+// Root header
+var rootLongHeader = buildHewdLogo("hewd") + buildLogoTagline(" – repository health diagnostics, scoring, and automated fixes\n\n")
+
+// Purpose shown below tagline
+var rootLongPurpose = buildCyanText("hewd") + ` analyzes repository health by evaluating documentation, configuration,
+and structural conventions. It provides fast scanning, actionable feedback,
+health scores, diff reports, and automated fixes.
+
+`
+
+// Features shown below purpose
+var rootLongFeatures = buildHeader("Features:") + buildFeaturesList(featuresList) + buildUseLine(`
+Use `, "hewd", ` to maintain consistent documentation, detect regressions, enforce
+standards, and track repository maturity over time.
+
+`)
+
+// Typical workflow
+
+// For use in "pkg/cmd/root.go"
+const RootUse = "hewd [command] [flags]"
+
+const RootShort = "Analyze, score, and improve the health of software repositories."
+
 // Full description.
-var RootLong = RootLongTagline + RootPurpose + RootFeatures + RootTypicalWorkflow
+var RootLong = rootLongHeader + rootLongPurpose + rootLongFeatures + rootLongTypicalWorkflow
 
 var start = formatter.CyanItalic(`(See `)
 var wfc = formatter.CyanItalic(`"Typical workflow"`)
