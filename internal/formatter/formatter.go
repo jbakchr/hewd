@@ -9,11 +9,14 @@ const (
 	RedBold         = "\033[31;1m"
 	Green           = "\033[32m"
 	Yellow          = "\033[33m"
-	Blue            = "\033[34m"
+	blue            = "\033[34m"
+	blueBold        = "\033[34;1m"
+	blueItalic      = "\033[3;34m"
+	blueBoldItalic  = "\033[1;3;34m"
 	cyan            = "\033[36m"
 	cyanBold        = "\033[36;1m"
-	CyanUnderline   = "\033[4;36m"
-	CyanItalic      = "\033[3;36m"
+	cyanItalic      = "\033[3;36m"
+	cyanBoldItalic  = "\033[1;3;36m"
 	whiteBold       = "\033[37;1m"
 	whiteItalic     = "\033[3;37m"
 	whiteBoldItalic = "\033[1;3;37m"
@@ -31,13 +34,37 @@ func apply(style, s string) string {
 	return style + s + Reset
 }
 
+func Blue(s string) string {
+	return apply(blue, s)
+}
+
+func BlueBold(s string) string {
+	return apply(blueBold, s)
+}
+
+func BlueItalic(s string) string {
+	return apply(blueItalic, s)
+}
+
+func BlueBoldItalic(s string) string {
+	return apply(blueBoldItalic, s)
+}
+
 // Cyan applies cyan coloring to the given string.
 func Cyan(s string) string {
 	return apply(cyan, s)
 }
 
+func CyanItalic(s string) string {
+	return apply(cyanItalic, s)
+}
+
 func CyanBold(s string) string {
 	return apply(cyanBold, s)
+}
+
+func CyanBoldItalic(s string) string {
+	return apply(cyanBoldItalic, s)
 }
 
 // WhiteBold prints white bold text.
