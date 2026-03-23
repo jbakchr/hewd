@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-
+	"github.com/jbakchr/hewd/internal/helptemplate"
 	"github.com/jbakchr/hewd/internal/helptext"
+	"github.com/spf13/cobra"
 )
 
 func NewRootCmd(version string) *cobra.Command {
@@ -46,7 +46,9 @@ func NewRootCmd(version string) *cobra.Command {
 	rootCmd.AddCommand(newBadgeCmd())
 
 	rootCmd.Version = version
-	rootCmd.SetVersionTemplate("hewd version {{.Version}}\n")
+	rootCmd.SetVersionTemplate(`hewd version {{.Version}}`)
+
+	rootCmd.SetHelpTemplate(helptemplate.RootHelpTemplate)
 
 	return rootCmd
 }
