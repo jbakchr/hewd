@@ -1,24 +1,23 @@
 package helptext
 
-import "github.com/jbakchr/hewd/internal/cliutils"
+import (
+	"github.com/jbakchr/hewd/internal/formatter"
+)
 
 const RootUse = "hewd [command] [flags]"
 
 const RootShort = "Analyze, score, and improve the health of software repositories."
 
 // Tagline shown at the very top of `hewd` output.
-const RootLongTagline = cliutils.CyanBold +
-	"hewd " + cliutils.WhiteBoldItalic + "– repository health diagnostics, scoring, and automated fixes" +
-	cliutils.Reset + "\n\n"
+var RootLongTagline = formatter.CyanBold("hewd") + formatter.WhiteBoldItalic(" – repository health diagnostics, scoring, and automated fixes\n\n")
 
 // Full description.
-const RootLong = RootLongTagline +
-	cliutils.Cyan + "hewd" + cliutils.Reset +
+var RootLong = RootLongTagline + formatter.Cyan("hewd") +
 	` analyzes repository health by evaluating documentation, configuration,
 and structural conventions. It provides fast scanning, actionable feedback,
 health scores, diff reports, and automated fixes.
 
-` + cliutils.WhiteBold + `Features:` + cliutils.Reset + `
+` + formatter.WhiteBold("Features:") + `
 
   • Fast, dependency-free repository scanner
   • Curated rules for documentation, structure, and configuration
@@ -28,7 +27,7 @@ health scores, diff reports, and automated fixes.
   • GitHub Action for PR comments
   • SVG badge generation
 
-Use ` + cliutils.Cyan + `hewd` + cliutils.Reset + ` to maintain consistent documentation, detect regressions, enforce
+Use ` + formatter.Cyan("hewd") + formatter.Reset + ` to maintain consistent documentation, detect regressions, enforce
 standards, and track repository maturity over time.
 
 `
