@@ -10,8 +10,8 @@ var RootHelpTemplate = `{{with .Long}}{{.}}{{else}}{{.Short}}{{end}}` +
   
   {{if .Runnable}}{{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}{{.CommandPath}} [command] [flags]{{end}}` +
 
-	formatter.WhiteBold("\n\nExamples:") + `
-	{{if .HasExample}}{{.Example}}{{end}}` +
+	formatter.WhiteBold("\n\nExamples:\n") + `
+  {{if .HasExample}}{{.Example}}{{end}}` +
 
 	formatter.WhiteBold("\nAnalysis Commands:") + `
 
@@ -33,5 +33,5 @@ var RootHelpTemplate = `{{with .Long}}{{.}}{{else}}{{.Short}}{{end}}` +
 	formatter.WhiteBold("\nFlags:") + `
 
 {{.Flags.FlagUsages}}
-{{if .HasAvailableSubCommands}}{{.CommandPath}} [command] --help for more information about a command.{{end}}
+{{if .HasAvailableSubCommands}}Use {{.CommandPath}} [command] [flags] --help for more information about a command.{{end}}
 `

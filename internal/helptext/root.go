@@ -8,16 +8,22 @@ const RootUse = "hewd [command] [flags]"
 
 const RootShort = "Analyze, score, and improve the health of software repositories."
 
-// Tagline shown at the very top of `hewd` output.
-var RootLongTagline = formatter.CyanBold("hewd") + formatter.WhiteBoldItalic(" – repository health diagnostics, scoring, and automated fixes\n\n")
+var hewdCyan = formatter.Cyan("hewd")
+var hewdCyanBold = formatter.CyanBold("hewd")
 
-// Full description.
-var RootLong = RootLongTagline + formatter.Cyan("hewd") +
-	` analyzes repository health by evaluating documentation, configuration,
+// Tagline shown at the very top of `hewd` output.
+var RootTaglineDesc = formatter.WhiteBoldItalic(" – repository health diagnostics, scoring, and automated fixes\n\n")
+var RootLongTagline = hewdCyanBold + RootTaglineDesc
+
+// Purpose shown below tagline
+var RootPurpose = hewdCyan + ` analyzes repository health by evaluating documentation, configuration,
 and structural conventions. It provides fast scanning, actionable feedback,
 health scores, diff reports, and automated fixes.
 
-` + formatter.WhiteBold("Features:") + `
+`
+
+// Features shown below purpose
+var RootFeatures = formatter.WhiteBold("Features:") + `
 
   • Fast, dependency-free repository scanner
   • Curated rules for documentation, structure, and configuration
@@ -27,21 +33,63 @@ health scores, diff reports, and automated fixes.
   • GitHub Action for PR comments
   • SVG badge generation
 
-Use ` + formatter.Cyan("hewd") + formatter.Reset + ` to maintain consistent documentation, detect regressions, enforce
+Use ` + hewdCyan + ` to maintain consistent documentation, detect regressions, enforce
 standards, and track repository maturity over time.
 
 `
 
-// Examples shown in `hewd --help`.
-const RootExample = `
-  # Scan a repository
-  hewd scan --pretty
+// Typical workflow
+var RootTypicalWorkflowHeader = formatter.CyanBoldItalic("Typical workflow:")
 
-  # Run full diagnostics and generate Markdown
-  hewd doctor --md > health.md
+var ScanRepo = formatter.Blue("1. Scan the repository")
+var DoctorRepo = formatter.Blue("2. Run full diagnostics to identify issues and compute scores")
+var FirstExport = formatter.Blue("3. Export a snapshot of the current health state (before changes)")
+var ApplyImprovement = formatter.Blue("4. Apply an improvement discovered from running `hewd doctor`")
+var SecondExport = formatter.Blue("5. Export a new snapshot after making improvements")
+var CompareDiff = formatter.Blue("6. Compare reports using the diff engine")
+
+var RootTypicalWorkflow = RootTypicalWorkflowHeader + `
+
+  ` + ScanRepo + `
+  hewd scan
+
+  ` + DoctorRepo + `
+  hewd doctor
+
+  ` + FirstExport + `
+  hewd export --output old.json
+
+  ` + ApplyImprovement + `
+  # e.g., create a LICENSE file, add a README section, or fix a config issue
+
+  ` + SecondExport + `
+  hewd export --json --output new.json
+
+  ` + CompareDiff + `
+  hewd diff old.json new.json --md > diff.md
+
+`
+
+// Full description.
+var RootLong = RootLongTagline + RootPurpose + RootFeatures + RootTypicalWorkflow
+
+var start = formatter.CyanItalic(`(See `)
+var wfc = formatter.CyanItalic(`"Typical workflow"`)
+var end = formatter.CyanItalic(` above for how these commands fit together — all commands shown are safe to run.)`)
+
+var parenthesisClean = start + wfc + end
+
+// Examples shown in `hewd --help`.
+var RootExample = parenthesisClean + `
+
+  # Scan a repository
+  hewd scan
+
+  # Run full diagnostics
+  hewd doctor
 
   # Export machine-readable project health
-  hewd export --output hewd.json
+  hewd export --json --output new.json
 
   # Compare reports using the diff engine
   hewd diff old.json new.json --md > diff.md
@@ -54,4 +102,4 @@ const RootExample = `
 
   # Initialize a hewd configuration file
   hewd init
-`
+  `
