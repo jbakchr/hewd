@@ -37,7 +37,7 @@ These core building blocks are stable and form the bedrock for all future develo
 
 # 🌱 Phase 1 — CLI UX & Developer Experience Polish
 
-**Status: 100% complete (A–E)**
+**Status: 80% complete (A–C,E)**
 
 ### ✔ Phase 1A — Helptext Extraction
 
@@ -56,14 +56,14 @@ These core building blocks are stable and form the bedrock for all future develo
 - Parallel examples
 - No stray HTML entities
 
-### ✔ Phase 1D — Pretty Output Polish
+### 🌱 Phase 1D — Pretty Output Polish (_in progress_)
 
 - Unified color palette
 - GitHub‑style severity icons
 - Consistent section formatting
 - Centralized severity icon logic
 
-### ✔ Phase 1E — Structured Error System (Now **fully completed**)
+### ✔ Phase 1E — Structured Error System
 
 - New structured error type: `HewdError{Msg, Hint}`
 - New helpers: `Err`, `ErrHint`, `RootErr`
