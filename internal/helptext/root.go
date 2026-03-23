@@ -2,7 +2,7 @@ package helptext
 
 import "github.com/jbakchr/hewd/internal/cliutils"
 
-const RootUse = "hewd"
+const RootUse = "hewd [command] [flags]"
 
 const RootShort = "Analyze, score, and improve the health of software repositories."
 
@@ -29,7 +29,9 @@ health scores, diff reports, and automated fixes.
   • SVG badge generation
 
 Use ` + cliutils.Cyan + `hewd` + cliutils.Reset + ` to maintain consistent documentation, detect regressions, enforce
-standards, and track repository maturity over time.`
+standards, and track repository maturity over time.
+
+`
 
 // Examples shown in `hewd --help`.
 const RootExample = `
@@ -52,4 +54,5 @@ const RootExample = `
   hewd badge --output badge.svg
 
   # Initialize a hewd configuration file
-  hewd init`
+  hewd init
+`
